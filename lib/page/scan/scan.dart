@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:get/get.dart';
 import 'package:puskeu/model/save_token.dart';
 import 'package:puskeu/page/login_design/login_animation.dart';
@@ -11,6 +12,12 @@ class ScanPage extends StatefulWidget {
 
 class _ScanPageState extends State<ScanPage> {
   String text = "Hasil QR Scan";
+
+  Future<String> _scan() async {
+    return await FlutterBarcodeScanner.scanBarcode(
+        "#000000", "Cancel", true, ScanMode.QR);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,8 +51,10 @@ class _ScanPageState extends State<ScanPage> {
             ),
             OutlinedButton(
               onPressed: () async {
-                text = await scanner.scan();
-                setState(() {});
+                // text = await scanner.scan();
+                setState(() {
+                  text = _scan() as String;
+                });
               },
               child: Text("Scan Disini"),
             ),

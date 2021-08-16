@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
+import 'package:puskeu/model/new_nik.dart';
 import 'package:puskeu/model/nik.dart';
 import 'package:puskeu/model/save_token.dart';
 import 'package:puskeu/page/add_photo/photo.dart';
@@ -15,7 +16,8 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   // List data;
 
-  Future<Nik> futureNik;
+  // Future<Nik> futureNik;
+  Future<List<NikBaru>> futureNik;
 
   @override
   void initState() {
@@ -23,10 +25,13 @@ class _SearchPageState extends State<SearchPage> {
     futureNik = fetchNik();
   }
 
-  Future<Nik> fetchNik() async {
+  Future<List<NikBaru>> fetchNik() async {
     var response = await http.get(
+      // Uri.parse(
+      //     "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/2125"),
       Uri.parse(
-          "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/2125"),
+          "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/?nik=21"),
+
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
@@ -34,20 +39,16 @@ class _SearchPageState extends State<SearchPage> {
       },
     );
     if (response.statusCode == 200) {
-      // If the server did return a 200 OK response,
-      // then parse the JSON.
-      return Nik.fromJson(json.decode(response.body)[0]);
-    } else {
-      // If the server did not return a 200 OK response,
-      // then throw an exception.
-      throw Exception('Failed to load album');
-    }
+      // return Nik.fromJson(json.decode(response.body));
+      print(response.body);
 
-    // setState(() {
-    //   var convertToJson = json.decode(response.body);
-    //   data = convertToJson;
-    // });
-    // return "Success";
+      final res = json.decode(response.body);
+      final data = res['data'];
+      return (data as List).map((data) => NikBaru.fromJson(data)).toList();
+    } else {
+      print(response.body);
+      throw Exception('Failed to load data');
+    }
   }
 
   @override
@@ -57,7 +58,7 @@ class _SearchPageState extends State<SearchPage> {
         title: Text("NIK"),
       ),
       body: SingleChildScrollView(
-        child: FutureBuilder<Nik>(
+        child: FutureBuilder<List<NikBaru>>(
           future: futureNik,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -65,8 +66,6 @@ class _SearchPageState extends State<SearchPage> {
             } else if (snapshot.hasError) {
               return Text('${snapshot.error}');
             }
-
-            // By default, show a loading spinner.
             return const CircularProgressIndicator();
           },
         ),
@@ -74,19 +73,29 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildbody(Nik data) {
+  Widget _buildbody(List<NikBaru> data) {
     return Container(
-        padding: EdgeInsets.all(10.0),
-        child: ListTile(
-          title: Text(
-            data.nik,
+      padding: EdgeInsets.all(10.0),
+      child: ListView.builder(
+        itemCount: data.length,
+        itemBuilder: (BuildContext context, int index) {
+          return Text(
+            data[index].nik,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
-          ),
-          trailing: IconButton(
-              onPressed: () {
-                Get.to(PhotoPage());
-              },
-              icon: Icon(Icons.add)),
-        ));
+          );
+          // ListTile(
+          //   title: Text(
+          //     data[index].nik,
+          //     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
+          //   ),
+          //   trailing: IconButton(
+          //       onPressed: () {
+          //         Get.to(() => PhotoPage());
+          //       },
+          //       icon: Icon(Icons.add)),
+          // );
+        },
+      ),
+    );
   }
 }

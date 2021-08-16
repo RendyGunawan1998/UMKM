@@ -17,8 +17,8 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
-      // home: PuskeuSplash(),
-      home: SearchNIK(),
+      home: PuskeuSplash(),
+      // home: SearchNIK(),
       // home: SearchPage(),
       // theme: ThemeData(canvasColor: Colors.transparent),
     );

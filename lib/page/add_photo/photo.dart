@@ -1,13 +1,16 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 import 'package:puskeu/model/save_token.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PhotoPage extends StatefulWidget {
   @override
@@ -16,10 +19,13 @@ class PhotoPage extends StatefulWidget {
 
 class _PhotoPageState extends State<PhotoPage> {
   File _selectedImage;
+  ProgressDialog pr;
   bool _inProgress = false;
-  TextEditingController nikTXT = TextEditingController();
-  TextEditingController jenis = TextEditingController();
+
+  var nikTXT = TextEditingController();
+  var jenis = TextEditingController();
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
   Location location = new Location();
   bool _serviceEnabled;
   PermissionStatus _permissionGranted;
@@ -95,6 +101,7 @@ class _PhotoPageState extends State<PhotoPage> {
         _selectedImage = cropped;
         _inProgress = false;
       });
+      _selectedImage.path;
     } else {
       setState(() {
         _inProgress = false;
@@ -140,6 +147,46 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
+  Future<String> addTreatment(String nik, int jenis, double latitude,
+      double longitude, String photo) async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+
+    Map<String, String> headers = {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + await Token().getAccessToken(),
+    };
+
+    var uri = Uri.parse(
+        'https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima-foto/');
+    var request = new http.MultipartRequest("POST", uri);
+
+    request.headers.addAll(headers);
+
+    request.fields['NIK'] = nik;
+    request.fields['KODEFOTO'] = jenis.toString();
+    request.fields['LATITUDE'] = latitude.toString();
+    request.fields['LONGITUDE'] = longitude.toString();
+
+    if (photo != '') {
+      var photoFile = await http.MultipartFile.fromPath("FOTO", photo);
+      request.files.add(photoFile);
+    }
+
+    http.Response response =
+        await http.Response.fromStream(await request.send());
+    // print(response);
+    if (response.statusCode == 200) {
+      // final data = json.decode(response.body);
+      print(response.body);
+      return "Berhasil";
+    } else {
+      // return "gagal";
+      print(response.body);
+      _showAlertDialog(context, response.statusCode);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     print(_selectedImage?.lengthSync());
@@ -150,11 +197,17 @@ class _PhotoPageState extends State<PhotoPage> {
       bottomNavigationBar: MaterialButton(
         color: Colors.blue,
         onPressed: () {
-          print({'NIK': nikTXT.text});
-          print({'KODEFOTO': TextValue.showBulan(jenis.text)});
-          print({'LATITUDE': _locationData.latitude});
-          print({'LONGITUDE': _locationData.longitude});
-          _buttonUpload();
+          // print({'NIK': nikTXT.text});
+          // print({'KODEFOTO': TextValue.showBulan(jenis.text)});
+          // print({'LATITUDE': _locationData.latitude});
+          // print({'LONGITUDE': _locationData.longitude});
+          addTreatment(
+              nikTXT.text,
+              TextValue.showBulan(jenis.text),
+              _locationData.latitude,
+              _locationData.longitude,
+              _selectedImage.path);
+          // _buttonUpload();
         },
         child: Text("Upload"),
       ),
@@ -251,13 +304,13 @@ class _PhotoPageState extends State<PhotoPage> {
 class TextValue {
   static showBulan(String display) {
     if (display == 'Depan') {
-      return '1';
+      return 1;
     } else if (display == 'Kiri') {
-      return '2';
+      return 2;
     } else if (display == 'Kanan') {
-      return '123';
+      return 123;
     } else if (display == 'Belakang') {
-      return '1111';
+      return 1111;
     }
   }
 }

@@ -75,12 +75,12 @@ class NikBaru {
   String kodepos;
   String nomorhp;
   int petugasEntry;
-  DateTime waktuEntry;
+  String waktuEntry;
   int petugasSurvey;
-  DateTime waktuSurvey;
+  String waktuSurvey;
   int petugasScan;
   int petugasSerahterima;
-  DateTime waktuSerahterima;
+  String waktuSerahterima;
   int petugasBukti;
   String kdsatker;
   String jenisusaha;
@@ -112,12 +112,12 @@ class NikBaru {
         kodepos: json["KODEPOS"],
         nomorhp: json["NOMORHP"],
         petugasEntry: json["PETUGAS_ENTRY"],
-        waktuEntry: DateTime.parse(json["WAKTU_ENTRY"]),
+        waktuEntry: json["WAKTU_ENTRY"],
         petugasSurvey: json["PETUGAS_SURVEY"],
-        waktuSurvey: DateTime.parse(json["WAKTU_SURVEY"]),
+        waktuSurvey: json["WAKTU_SURVEY"],
         petugasScan: json["PETUGAS_SCAN"],
         petugasSerahterima: json["PETUGAS_SERAHTERIMA"],
-        waktuSerahterima: DateTime.parse(json["WAKTU_SERAHTERIMA"]),
+        waktuSerahterima: json["WAKTU_SERAHTERIMA"],
         petugasBukti: json["PETUGAS_BUKTI"],
         kdsatker: json["KDSATKER"],
         jenisusaha: json["JENISUSAHA"],
@@ -162,15 +162,12 @@ class NikBaru {
         "KODEPOS": kodepos,
         "NOMORHP": nomorhp,
         "PETUGAS_ENTRY": petugasEntry,
-        "WAKTU_ENTRY":
-            "${waktuEntry.year.toString().padLeft(4, '0')}-${waktuEntry.month.toString().padLeft(2, '0')}-${waktuEntry.day.toString().padLeft(2, '0')}",
+        "WAKTU_ENTRY": waktuEntry,
         "PETUGAS_SURVEY": petugasSurvey,
-        "WAKTU_SURVEY":
-            "${waktuSurvey.year.toString().padLeft(4, '0')}-${waktuSurvey.month.toString().padLeft(2, '0')}-${waktuSurvey.day.toString().padLeft(2, '0')}",
+        "WAKTU_SURVEY": waktuSurvey,
         "PETUGAS_SCAN": petugasScan,
         "PETUGAS_SERAHTERIMA": petugasSerahterima,
-        "WAKTU_SERAHTERIMA":
-            "${waktuSerahterima.year.toString().padLeft(4, '0')}-${waktuSerahterima.month.toString().padLeft(2, '0')}-${waktuSerahterima.day.toString().padLeft(2, '0')}",
+        "WAKTU_SERAHTERIMA": waktuSerahterima,
         "PETUGAS_BUKTI": petugasBukti,
         "KDSATKER": kdsatker,
         "JENISUSAHA": jenisusaha,
