@@ -1,8 +1,13 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:form_field_validator/form_field_validator.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:location/location.dart';
+import 'package:puskeu/model/save_token.dart';
 
 class PhotoPage extends StatefulWidget {
   @override
@@ -12,6 +17,40 @@ class PhotoPage extends StatefulWidget {
 class _PhotoPageState extends State<PhotoPage> {
   File _selectedImage;
   bool _inProgress = false;
+  TextEditingController nikTXT = TextEditingController();
+  TextEditingController jenis = TextEditingController();
+  GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  Location location = new Location();
+  bool _serviceEnabled;
+  PermissionStatus _permissionGranted;
+  LocationData _locationData;
+  // bool _isListenLocation = false;
+  bool _isGetLocation = false;
+
+  final List<String> nameList = <String>[
+    "Tampak Depan",
+    "Tampak Kiri",
+    "Tampak Kanan",
+    "Tampak Belakang",
+  ];
+
+  _getLocation() async {
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (_serviceEnabled) return;
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) return;
+    }
+    _locationData = await location.getLocation();
+    setState(() {
+      _isGetLocation = true;
+    });
+  }
 
   Widget getImageWidget() {
     if (_selectedImage != null) {
@@ -31,6 +70,7 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
+  // =================== GET IMAGE DONE ================
   getImage(ImageSource source) async {
     setState(() {
       _inProgress = true;
@@ -38,17 +78,19 @@ class _PhotoPageState extends State<PhotoPage> {
     File image = await ImagePicker.pickImage(source: source);
     if (image != null) {
       File cropped = await ImageCropper.cropImage(
-          sourcePath: image.path,
-          aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-          compressQuality: 100,
-          maxHeight: 700,
-          maxWidth: 700,
-          compressFormat: ImageCompressFormat.jpg,
-          androidUiSettings: AndroidUiSettings(
-              toolbarColor: Colors.deepOrange.shade900,
-              statusBarColor: Colors.deepOrange.shade900,
-              backgroundColor: Colors.white,
-              toolbarTitle: "Cropper"));
+        sourcePath: image.path,
+        aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
+        compressQuality: 50,
+        maxHeight: 200,
+        maxWidth: 200,
+        compressFormat: ImageCompressFormat.jpg,
+        androidUiSettings: AndroidUiSettings(
+            toolbarColor: Colors.deepOrange.shade900,
+            statusBarColor: Colors.deepOrange.shade900,
+            backgroundColor: Colors.white,
+            // hideBottomControls: true,
+            toolbarTitle: "Cropper"),
+      );
       this.setState(() {
         _selectedImage = cropped;
         _inProgress = false;
@@ -60,54 +102,182 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
+  void _buttonUpload() async {
+    if (formKey.currentState.validate()) {
+      String url =
+          'https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima-foto/';
+
+      var _body = {
+        'NIK': nikTXT.text,
+        'KODEFOTO': TextValue.showBulan(jenis.text),
+        'LATITUDE': _locationData.latitude,
+        'LONGITUDE': _locationData.longitude,
+        'FOTO': _selectedImage,
+      };
+      try {
+        var response = await http.post(
+          Uri.parse(url),
+          body: json.encode(_body),
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          },
+        );
+        if (response.statusCode == 200) {
+          Token().saveToken(response.body);
+          print('Token : ' + response.body);
+          print("Success upload");
+
+          // return response.body;
+        } else {
+          _showAlertDialog(context, response.statusCode);
+        }
+      } catch (e) {
+        print(e);
+      }
+    } else {
+      print("upload unsuccess");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     print(_selectedImage?.lengthSync());
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Click | Pick "),
-        ),
-        bottomNavigationBar: MaterialButton(
-          color: Colors.blue,
-          onPressed: () {},
-          child: Text("Upload"),
-        ),
-        body: Stack(
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                getImageWidget(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    MaterialButton(
-                      onPressed: () {
-                        getImage(ImageSource.camera);
-                      },
-                      color: Colors.green,
-                      child: Text("Camera"),
+      appBar: AppBar(
+        title: Text("Click | Pick "),
+      ),
+      bottomNavigationBar: MaterialButton(
+        color: Colors.blue,
+        onPressed: () {
+          print({'NIK': nikTXT.text});
+          print({'KODEFOTO': TextValue.showBulan(jenis.text)});
+          print({'LATITUDE': _locationData.latitude});
+          print({'LONGITUDE': _locationData.longitude});
+          _buttonUpload();
+        },
+        child: Text("Upload"),
+      ),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Form(
+              key: formKey,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  getImageWidget(),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        MaterialButton(
+                          minWidth: 120,
+                          onPressed: () {
+                            getImage(ImageSource.camera);
+                            _getLocation();
+                          },
+                          color: Colors.green,
+                          child: Text("Take Photo"),
+                        ),
+                        TextFormField(
+                          decoration: InputDecoration(
+                              hintText: "Contoh: 2125",
+                              labelText: "NIK",
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20))),
+                          keyboardType: TextInputType.number,
+                          validator:
+                              RequiredValidator(errorText: 'NIK required'),
+                          controller: nikTXT,
+                          onSaved: (value) {
+                            nikTXT.text = value;
+                          },
+                        ),
+                      ],
                     ),
-                    MaterialButton(
-                      color: Colors.green,
-                      child: Text("Device"),
-                      onPressed: () {
-                        getImage(ImageSource.gallery);
-                      },
-                    ),
-                  ],
-                )
-              ],
-            ),
-            (_inProgress)
-                ? Container(
-                    height: MediaQuery.of(context).size.height * 0.95,
-                    child: Center(
-                      child: CircularProgressIndicator(),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        MaterialButton(
+                          minWidth: 120,
+                          color: Colors.green,
+                          child: Text("Delete"),
+                          onPressed: () {
+                            getImage(ImageSource.gallery);
+                          },
+                        ),
+                        TextFormField(
+                          decoration: InputDecoration(
+                              hintText: "D/B/L/R",
+                              labelText: "Jenis Foto",
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20))),
+                          keyboardType: TextInputType.text,
+                          validator:
+                              RequiredValidator(errorText: 'NIK required'),
+                          controller: jenis,
+                          onSaved: (value) {
+                            jenis.text = value;
+                          },
+                        ),
+                      ],
                     ),
                   )
-                : Center(),
-          ],
-        ));
+                ],
+              ),
+            ),
+          ),
+          (_inProgress)
+              ? Container(
+                  height: MediaQuery.of(context).size.height * 0.95,
+                  child: Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              : Center(),
+        ],
+      ),
+    );
   }
+}
+
+class TextValue {
+  static showBulan(String display) {
+    if (display == 'Depan') {
+      return '1';
+    } else if (display == 'Kiri') {
+      return '2';
+    } else if (display == 'Kanan') {
+      return '123';
+    } else if (display == 'Belakang') {
+      return '1111';
+    }
+  }
+}
+
+_showAlertDialog(BuildContext context, int err) {
+  Widget okButton = TextButton(
+    child: Text("OK"),
+    onPressed: () => Navigator.pop(context),
+  );
+  AlertDialog alert = AlertDialog(
+    title: Text("Error"),
+    content: Text("Something wrong. \nPlease try again"),
+    actions: [
+      okButton,
+    ],
+  );
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
 }

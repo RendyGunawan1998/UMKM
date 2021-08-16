@@ -108,16 +108,6 @@ class _LoginAnimationState extends State<LoginAnimation>
                   height: 100,
                 ),
               ),
-              // Padding(
-              //   padding: const EdgeInsets.only(left: 5),
-              //   child: Text(
-              //     "GAJI DAN TUNKIN",
-              //     style: TextStyle(
-              //         fontSize: 20,
-              //         color: Colors.black54,
-              //         fontWeight: FontWeight.bold),
-              //   ),
-              // ),
               SizedBox(
                 height: 20,
               ),
@@ -244,16 +234,30 @@ class _LoginAnimationState extends State<LoginAnimation>
       setState(() {
         visible = true;
       });
-      String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/login/';
+
+      String url = "https://app.puskeu.polri.go.id:2216/umkm/mobile/login/";
 
       var _body = {'NRP': userTC.text, 'password': passTC.text};
+      // var p = http.post(
+      //   Uri.parse('https://jsonplaceholder.typicode.com/albums'),
+      //   headers: <String, String>{
+      //     'Content-Type': 'application/json; charset=UTF-8',
+      //   },
+      //   body: jsonEncode(<String, String>{
+      //     'title': "test",
+      //   }),
+      // );
+      // print(p);
+
+      print("NRP " + json.encode(_body));
       try {
         var response = await http.post(
-          Uri.parse(url),
+          Uri.parse("https://app.puskeu.polri.go.id:2216/umkm/mobile/login/"),
           body: json.encode(_body),
           headers: {
             "Accept": "application/json",
             "Content-Type": "application/json",
+            // "Authorization": "Bearer " + await Token().getAccessToken(),
           },
         );
         if (response.statusCode == 200) {
@@ -263,7 +267,7 @@ class _LoginAnimationState extends State<LoginAnimation>
             visible = false;
           });
 
-          await getDataNIK();
+          // await getDataNIK();
           Get.offAll(LoadingScreen());
         } else {
           setState(() {
