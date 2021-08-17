@@ -252,7 +252,7 @@ class _LoginAnimationState extends State<LoginAnimation>
       print("NRP " + json.encode(_body));
       try {
         var response = await http.post(
-          Uri.parse("http://192.168.123.146:8000/mobile/login/"),
+          Uri.parse("https://app.puskeu.polri.go.id:2216/umkm/mobile/login/"),
           body: json.encode(_body),
           headers: {
             "Accept": "application/json",

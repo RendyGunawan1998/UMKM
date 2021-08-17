@@ -76,24 +76,26 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildbody(List<NikBaru> data) {
     return Container(
       padding: EdgeInsets.all(10.0),
+      width: Get.width,
+      height: Get.height * 0.8,
       child: ListView.builder(
         itemCount: data.length,
         itemBuilder: (BuildContext context, int index) {
-          return Text(
-            data[index].nik,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
+          return ListTile(
+            title: Text(
+              data[index].nik,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
+            ),
+            subtitle: Text(
+              data[index].nama,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
+            ),
+            trailing: IconButton(
+                onPressed: () {
+                  Get.to(() => PhotoPage());
+                },
+                icon: Icon(Icons.add)),
           );
-          // ListTile(
-          //   title: Text(
-          //     data[index].nik,
-          //     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
-          //   ),
-          //   trailing: IconButton(
-          //       onPressed: () {
-          //         Get.to(() => PhotoPage());
-          //       },
-          //       icon: Icon(Icons.add)),
-          // );
         },
       ),
     );

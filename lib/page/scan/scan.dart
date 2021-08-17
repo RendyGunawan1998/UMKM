@@ -15,7 +15,8 @@ class _ScanPageState extends State<ScanPage> {
 
   Future<String> _scan() async {
     return await FlutterBarcodeScanner.scanBarcode(
-        "#000000", "Cancel", true, ScanMode.QR);
+            "#000000", "Cancel", true, ScanMode.QR)
+        .then((value) => null);
   }
 
   @override
@@ -51,9 +52,9 @@ class _ScanPageState extends State<ScanPage> {
             ),
             OutlinedButton(
               onPressed: () async {
-                // text = await scanner.scan();
+                text = await scanner.scan();
                 setState(() {
-                  text = _scan() as String;
+                  // text = _scan();
                 });
               },
               child: Text("Scan Disini"),
