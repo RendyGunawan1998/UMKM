@@ -1,5 +1,6 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:puskeu/page/profile/profile.dart';
 import 'package:puskeu/page/scan/scan.dart';
 import 'package:puskeu/page/search/search_page.dart';
 
@@ -12,7 +13,7 @@ class _CurveBarState extends State<CurveBar> {
 
   final SearchPage _search = SearchPage();
   final ScanPage _scan = ScanPage();
-  // final ProfileNewDesign _profile = ProfileNewDesign();
+  final ProfilePage _profile = ProfilePage();
 
   Widget _tampilPageIndex = new SearchPage();
 
@@ -24,9 +25,9 @@ class _CurveBarState extends State<CurveBar> {
       case 1:
         return _scan;
         break;
-      // case 2:
-      //   return _profile;
-      //   break;
+      case 2:
+        return _profile;
+        break;
       default:
         return Container(
           child: Center(
@@ -54,17 +55,17 @@ class _CurveBarState extends State<CurveBar> {
             Icons.camera,
             color: Colors.white,
           ),
-          Icon(
-            Icons.add_chart_rounded,
-            color: Colors.white,
+          CircleAvatar(
+            backgroundColor: Colors.transparent,
+            child: Icon(
+              Icons.person,
+              color: Colors.white70,
+            ),
+            radius: 14,
           ),
-          // CircleAvatar(
-          //   backgroundImage: AssetImage('assets/images/polisi.jpg'),
-          //   radius: 14,
-          // ),
         ],
-        color: Colors.brown.shade200,
-        buttonBackgroundColor: Colors.red[400],
+        color: Colors.brown[400],
+        buttonBackgroundColor: Colors.grey[200],
         backgroundColor: Colors.transparent,
         animationCurve: Curves.bounceInOut,
         animationDuration: Duration(milliseconds: 100),

@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+// import 'package:get/get.dart';
 import 'package:puskeu/model/new_nik.dart';
-import 'package:puskeu/model/nik.dart';
+// import 'package:puskeu/model/nik.dart';
 import 'package:puskeu/model/save_token.dart';
 import 'package:puskeu/page/add_photo/photo.dart';
+// import 'package:puskeu/page/add_photo/photo.dart';
 
 class SearchPage extends StatefulWidget {
   @override
@@ -38,6 +40,7 @@ class _SearchPageState extends State<SearchPage> {
         "Authorization": "Bearer" + await Token().getAccessToken(),
       },
     );
+    print(response);
     if (response.statusCode == 200) {
       // return Nik.fromJson(json.decode(response.body));
       print(response.body);
@@ -55,7 +58,20 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("NIK"),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Colors.brown[400], Colors.brown[200]])),
+        ),
+        // backgroundColor: Colors.blueGrey[200],
+        elevation: 0,
+        title: Row(
+          children: <Widget>[
+            Text("Search"),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         child: FutureBuilder<List<NikBaru>>(
@@ -92,7 +108,7 @@ class _SearchPageState extends State<SearchPage> {
             ),
             trailing: IconButton(
                 onPressed: () {
-                  Get.to(() => PhotoPage());
+                  Get.to(() => PhotoPage(data[index]));
                 },
                 icon: Icon(Icons.add)),
           );

@@ -3,8 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:puskeu/bloc/simple_bloc_observer.dart';
 import 'package:puskeu/extra_screen/puskeu_splash.dart';
 import 'package:get/get.dart';
-import 'package:puskeu/page/search/search_page.dart';
-import 'package:puskeu/search.dart';
 
 void main() {
   Bloc.observer = SimpleBlocObserver();

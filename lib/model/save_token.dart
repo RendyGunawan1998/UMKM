@@ -1,18 +1,11 @@
 import 'dart:convert';
 
-import 'package:puskeu/model/data.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Token {
   Future<void> saveUserData(String data) async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     pref.setString('user_data', data);
-  }
-
-  Future<String> getUserNRP() async {
-    SharedPreferences pref = await SharedPreferences.getInstance();
-    var data = UserInfoData.fromJson(json.decode(pref.getString('user_data')));
-    return data.nrp;
   }
 
   Future<void> saveToken(String token) async {

@@ -235,20 +235,7 @@ class _LoginAnimationState extends State<LoginAnimation>
         visible = true;
       });
 
-      String url = "https://app.puskeu.polri.go.id:2216/umkm/mobile/login/";
-
       var _body = {'NRP': userTC.text, 'password': passTC.text};
-      // var p = http.post(
-      //   Uri.parse('https://jsonplaceholder.typicode.com/albums'),
-      //   headers: <String, String>{
-      //     'Content-Type': 'application/json; charset=UTF-8',
-      //   },
-      //   body: jsonEncode(<String, String>{
-      //     'title': "test",
-      //   }),
-      // );
-      // print(p);
-
       print("NRP " + json.encode(_body));
       try {
         var response = await http.post(

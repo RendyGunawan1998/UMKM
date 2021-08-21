@@ -2,25 +2,31 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
-import 'package:progress_dialog/progress_dialog.dart';
+import 'package:puskeu/extra_screen/curve_bar.dart';
+import 'package:puskeu/model/new_nik.dart';
 import 'package:puskeu/model/save_token.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:puskeu/page/search/search_page.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 class PhotoPage extends StatefulWidget {
+  final NikBaru nikBaru;
+  PhotoPage(this.nikBaru);
   @override
   _PhotoPageState createState() => _PhotoPageState();
 }
 
 class _PhotoPageState extends State<PhotoPage> {
+  // ============================= Variabel ====================
   File _selectedImage;
-  ProgressDialog pr;
   bool _inProgress = false;
+  // String tempJenis = "1";
 
   var nikTXT = TextEditingController();
   var jenis = TextEditingController();
@@ -30,15 +36,56 @@ class _PhotoPageState extends State<PhotoPage> {
   bool _serviceEnabled;
   PermissionStatus _permissionGranted;
   LocationData _locationData;
-  // bool _isListenLocation = false;
-  bool _isGetLocation = false;
+  // List<Map<String, dynamic>> kodeFoto = [
+  //   {"display": "KTP", "value": "1"},
+  //   {"display": "SITU", "value": "123"},
+  //   {"display": "KTP", "value": "2"},
+  //   {"display": "SIUP", "value": "1111"},
+  // ];
+  List jenisPhoto = [];
+  String _mySelection;
+  // ============================= Variabel ====================
 
-  final List<String> nameList = <String>[
-    "Tampak Depan",
-    "Tampak Kiri",
-    "Tampak Kanan",
-    "Tampak Belakang",
-  ];
+  // ============================= Init ====================
+  @override
+  void initState() {
+    nikTXT.text = widget.nikBaru.nik;
+    this._getJenisPhoto();
+    super.initState();
+  }
+
+  reset() {
+    setState(() {
+      _selectedImage = null;
+    });
+  }
+  // ============================= Init ====================
+
+  // ============================= Function ====================
+  Future<String> _getJenisPhoto() async {
+    String url = 'https://app.puskeu.polri.go.id:2216/umkm/web/jenis-foto/';
+
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer" + await Token().getAccessToken(),
+      },
+    );
+    if (response.statusCode == 200) {
+      print(response.body);
+      var responeBody = jsonDecode(response.body);
+
+      setState(() {
+        jenisPhoto = responeBody;
+      });
+
+      return "Get Jenis Foto Success";
+    } else {
+      throw Exception('Failed to load profile data');
+    }
+  }
 
   _getLocation() async {
     _serviceEnabled = await location.serviceEnabled();
@@ -53,17 +100,17 @@ class _PhotoPageState extends State<PhotoPage> {
       if (_permissionGranted != PermissionStatus.granted) return;
     }
     _locationData = await location.getLocation();
-    setState(() {
-      _isGetLocation = true;
-    });
+    // setState(() {
+    //   _isGetLocation = true;
+    // });
   }
 
   Widget getImageWidget() {
     if (_selectedImage != null) {
       return Image.file(
         _selectedImage,
-        width: 100,
-        height: 100,
+        width: 300,
+        height: 300,
         fit: BoxFit.cover,
       );
     } else {
@@ -76,7 +123,6 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
-  // =================== GET IMAGE DONE ================
   getImage(ImageSource source) async {
     setState(() {
       _inProgress = true;
@@ -109,47 +155,9 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
-  void _buttonUpload() async {
-    if (formKey.currentState.validate()) {
-      String url =
-          'https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima-foto/';
-
-      var _body = {
-        'NIK': nikTXT.text,
-        'KODEFOTO': TextValue.showBulan(jenis.text),
-        'LATITUDE': _locationData.latitude,
-        'LONGITUDE': _locationData.longitude,
-        'FOTO': _selectedImage,
-      };
-      try {
-        var response = await http.post(
-          Uri.parse(url),
-          body: json.encode(_body),
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-          },
-        );
-        if (response.statusCode == 200) {
-          Token().saveToken(response.body);
-          print('Token : ' + response.body);
-          print("Success upload");
-
-          // return response.body;
-        } else {
-          _showAlertDialog(context, response.statusCode);
-        }
-      } catch (e) {
-        print(e);
-      }
-    } else {
-      print("upload unsuccess");
-    }
-  }
-
-  Future<String> addTreatment(String nik, int jenis, double latitude,
+  Future<String> addTreatment(String nik, String jenis, double latitude,
       double longitude, String photo) async {
-    SharedPreferences preferences = await SharedPreferences.getInstance();
+    // SharedPreferences preferences = await SharedPreferences.getInstance();
 
     Map<String, String> headers = {
       "Accept": "application/json",
@@ -179,150 +187,156 @@ class _PhotoPageState extends State<PhotoPage> {
     if (response.statusCode == 200) {
       // final data = json.decode(response.body);
       print(response.body);
+      _showAlertDialoSuccess(context, response.statusCode);
       return "Berhasil";
     } else {
-      // return "gagal";
       print(response.body);
       _showAlertDialog(context, response.statusCode);
+      return "gagal";
     }
   }
+  // ============================= Function ====================
 
+  // ============================= Body ====================
   @override
   Widget build(BuildContext context) {
     print(_selectedImage?.lengthSync());
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Click | Pick "),
-      ),
-      bottomNavigationBar: MaterialButton(
-        color: Colors.blue,
-        onPressed: () {
-          // print({'NIK': nikTXT.text});
-          // print({'KODEFOTO': TextValue.showBulan(jenis.text)});
-          // print({'LATITUDE': _locationData.latitude});
-          // print({'LONGITUDE': _locationData.longitude});
-          addTreatment(
-              nikTXT.text,
-              TextValue.showBulan(jenis.text),
-              _locationData.latitude,
-              _locationData.longitude,
-              _selectedImage.path);
-          // _buttonUpload();
-        },
-        child: Text("Upload"),
-      ),
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Form(
-              key: formKey,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  getImageWidget(),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        MaterialButton(
-                          minWidth: 120,
-                          onPressed: () {
-                            getImage(ImageSource.camera);
-                            _getLocation();
-                          },
-                          color: Colors.green,
-                          child: Text("Take Photo"),
-                        ),
-                        TextFormField(
-                          decoration: InputDecoration(
-                              hintText: "Contoh: 2125",
-                              labelText: "NIK",
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20))),
-                          keyboardType: TextInputType.number,
-                          validator:
-                              RequiredValidator(errorText: 'NIK required'),
-                          controller: nikTXT,
-                          onSaved: (value) {
-                            nikTXT.text = value;
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        MaterialButton(
-                          minWidth: 120,
-                          color: Colors.green,
-                          child: Text("Delete"),
-                          onPressed: () {
-                            getImage(ImageSource.gallery);
-                          },
-                        ),
-                        TextFormField(
-                          decoration: InputDecoration(
-                              hintText: "D/B/L/R",
-                              labelText: "Jenis Foto",
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20))),
-                          keyboardType: TextInputType.text,
-                          validator:
-                              RequiredValidator(errorText: 'NIK required'),
-                          controller: jenis,
-                          onSaved: (value) {
-                            jenis.text = value;
-                          },
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
-            ),
+        appBar: AppBar(
+          flexibleSpace: Container(
+            decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.brown[400], Colors.brown[200]])),
           ),
-          (_inProgress)
-              ? Container(
-                  height: MediaQuery.of(context).size.height * 0.95,
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                )
-              : Center(),
-        ],
-      ),
+          // backgroundColor: Colors.blueGrey[200],
+          elevation: 0,
+          title: Row(
+            children: <Widget>[
+              Text("Click | Pick | Crop"),
+            ],
+          ),
+        ),
+        bottomNavigationBar: MaterialButton(
+          color: Colors.blue[200],
+          onPressed: () {
+            print(nikTXT.text);
+            print(_mySelection);
+            print(_locationData.longitude);
+            print(_locationData.latitude);
+            print(_selectedImage.path);
+            addTreatment(nikTXT.text, _mySelection, _locationData.latitude,
+                _locationData.longitude, _selectedImage.path);
+          },
+          child: Text("Upload"),
+        ),
+        body: _buildBody(context));
+  }
+
+  Widget _buildBody(BuildContext context) {
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              getImageWidget(),
+              MaterialButton(
+                minWidth: 120,
+                onPressed: () {
+                  getImage(ImageSource.camera);
+                  _getLocation();
+                },
+                color: Colors.green,
+                child: Text("Take Photo"),
+              ),
+              MaterialButton(
+                minWidth: 120,
+                color: Colors.green,
+                child: Text("Delete"),
+                onPressed: () {
+                  reset();
+                },
+              ),
+              TextFormField(
+                readOnly: true,
+                decoration: InputDecoration(
+                    hintText: "Contoh: 2125",
+                    labelText: "NIK",
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20))),
+                keyboardType: TextInputType.number,
+                validator: RequiredValidator(errorText: 'NIK required'),
+                controller: nikTXT,
+                onSaved: (value) {
+                  nikTXT.text = value;
+                },
+              ),
+              DropdownButton(
+                dropdownColor: Colors.white,
+                isExpanded: true,
+                hint: Text('Jenis Foto'),
+                value: _mySelection,
+                items: jenisPhoto.map((item) {
+                  return DropdownMenuItem(
+                    child: Text(item['NAMAFOTO']),
+                    value: item['KODEFOTO'].toString(),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _mySelection = value;
+                    print(_mySelection);
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+        (_inProgress)
+            ? Container(
+                height: MediaQuery.of(context).size.height * 0.95,
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            : Center(),
+      ],
     );
   }
+  // ============================= Body ====================
 }
 
+// ============================= Init ====================
 class TextValue {
   static showBulan(String display) {
-    if (display == 'Depan') {
+    if (display == 'KTP') {
       return 1;
-    } else if (display == 'Kiri') {
+    } else if (display == 'KTP') {
       return 2;
-    } else if (display == 'Kanan') {
+    } else if (display == 'SITU') {
       return 123;
-    } else if (display == 'Belakang') {
+    } else if (display == 'SIUP') {
       return 1111;
     }
   }
 }
+// ============================= Init ====================
 
+// ============================= Function Alert ====================
 _showAlertDialog(BuildContext context, int err) {
   Widget okButton = TextButton(
     child: Text("OK"),
-    onPressed: () => Navigator.pop(context),
+    onPressed: () {
+      Navigator.pop(context);
+    },
   );
   AlertDialog alert = AlertDialog(
     title: Text("Error"),
-    content: Text("Something wrong. \nPlease try again"),
+    content: Text("Data gagal dimasukkan / Data sudah pernah dimasukkan"),
     actions: [
       okButton,
     ],
@@ -334,3 +348,24 @@ _showAlertDialog(BuildContext context, int err) {
     },
   );
 }
+
+_showAlertDialoSuccess(BuildContext context, int err) {
+  Widget okButton = TextButton(
+    child: Text("OK"),
+    onPressed: () => Get.offAll(() => CurveBar()),
+  );
+  AlertDialog alert = AlertDialog(
+    title: Text("Success"),
+    content: Text("Data berhasil diinput"),
+    actions: [
+      okButton,
+    ],
+  );
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
+// ============================= Function Alert ====================
