@@ -1,9 +1,8 @@
 // To parse this JSON data, do
 //
-//     final nik = nikFromJson(jsonString);
+//     final nikBaru = nikBaruFromJson(jsonString);
 
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 List<NikBaru> nikBaruFromJson(String str) =>
     List<NikBaru>.from(json.decode(str).map((x) => NikBaru.fromJson(x)));
@@ -48,98 +47,98 @@ class NikBaru {
     this.kdsatker,
     this.jenisusaha,
     this.status,
+    this.noRekeningBank,
+    this.namaBank,
+    this.atasNama,
+    this.cetakUndangan,
   });
 
   String nik;
   String nama;
-  DateTime tanggalahir;
+  String tanggalahir;
   String jeniskelamin;
   String namajeniskelamin;
   String alamatNamajalan;
-  int alamatNorumah;
-  int alamatRt;
-  int alamatRw;
+  String alamatNorumah;
+  String alamatRt;
+  String alamatRw;
   String alamatKelurahan;
   String alamatKecamatan;
   String alamatKabupaten;
   String alamatPropinsi;
   String nib;
   String alamatusahaNamajalan;
-  int alamatusahaNorumah;
-  int alamatusahaRt;
-  int alamatusahaRw;
+  String alamatusahaNorumah;
+  String alamatusahaRt;
+  String alamatusahaRw;
   String alamatusahaKelurahan;
   String alamatusahaKecamatan;
   String alamatusahaKabupaten;
   String alamatusahaPropinsi;
   String kodepos;
   String nomorhp;
-  int petugasEntry;
+  String petugasEntry;
   String waktuEntry;
-  int petugasSurvey;
+  String petugasSurvey;
   String waktuSurvey;
-  int petugasScan;
-  int petugasSerahterima;
+  String petugasScan;
+  String petugasSerahterima;
   String waktuSerahterima;
-  int petugasBukti;
+  String petugasBukti;
   String kdsatker;
   String jenisusaha;
-  int status;
+  String status;
+  String noRekeningBank;
+  String namaBank;
+  String atasNama;
+  String cetakUndangan;
 
   factory NikBaru.fromJson(Map<String, dynamic> json) => NikBaru(
         nik: json["NIK"],
         nama: json["NAMA"],
-        tanggalahir: DateTime.parse(json["TANGGALAHIR"]),
+        tanggalahir: json["TANGGALAHIR"],
         jeniskelamin: json["JENISKELAMIN"],
         namajeniskelamin: json["NAMAJENISKELAMIN"],
         alamatNamajalan: json["ALAMAT_NAMAJALAN"],
-        alamatNorumah: json["ALAMAT_NORUMAH"],
-        alamatRt: json["ALAMAT_RT"],
-        alamatRw: json["ALAMAT_RW"],
+        alamatNorumah: json["ALAMAT_NORUMAH"].toString(),
+        alamatRt: json["ALAMAT_RT"].toString(),
+        alamatRw: json["ALAMAT_RW"].toString(),
         alamatKelurahan: json["ALAMAT_KELURAHAN"],
         alamatKecamatan: json["ALAMAT_KECAMATAN"],
         alamatKabupaten: json["ALAMAT_KABUPATEN"],
         alamatPropinsi: json["ALAMAT_PROPINSI"],
         nib: json["NIB"],
         alamatusahaNamajalan: json["ALAMATUSAHA_NAMAJALAN"],
-        alamatusahaNorumah: json["ALAMATUSAHA_NORUMAH"],
-        alamatusahaRt: json["ALAMATUSAHA_RT"],
-        alamatusahaRw: json["ALAMATUSAHA_RW"],
+        alamatusahaNorumah: json["ALAMATUSAHA_NORUMAH"].toString(),
+        alamatusahaRt: json["ALAMATUSAHA_RT"].toString(),
+        alamatusahaRw: json["ALAMATUSAHA_RW"].toString(),
         alamatusahaKelurahan: json["ALAMATUSAHA_KELURAHAN"],
         alamatusahaKecamatan: json["ALAMATUSAHA_KECAMATAN"],
         alamatusahaKabupaten: json["ALAMATUSAHA_KABUPATEN"],
         alamatusahaPropinsi: json["ALAMATUSAHA_PROPINSI"],
         kodepos: json["KODEPOS"],
         nomorhp: json["NOMORHP"],
-        petugasEntry: json["PETUGAS_ENTRY"],
+        petugasEntry: json["PETUGAS_ENTRY"].toString(),
         waktuEntry: json["WAKTU_ENTRY"],
-        petugasSurvey: json["PETUGAS_SURVEY"],
+        petugasSurvey: json["PETUGAS_SURVEY"].toString(),
         waktuSurvey: json["WAKTU_SURVEY"],
-        petugasScan: json["PETUGAS_SCAN"],
-        petugasSerahterima: json["PETUGAS_SERAHTERIMA"],
+        petugasScan: json["PETUGAS_SCAN"].toString(),
+        petugasSerahterima: json["PETUGAS_SERAHTERIMA"].toString(),
         waktuSerahterima: json["WAKTU_SERAHTERIMA"],
-        petugasBukti: json["PETUGAS_BUKTI"],
+        petugasBukti: json["PETUGAS_BUKTI"].toString(),
         kdsatker: json["KDSATKER"],
         jenisusaha: json["JENISUSAHA"],
-        status: json["STATUS"],
+        status: json["STATUS"].toString(),
+        noRekeningBank: json["no_rekening_bank"],
+        namaBank: json["nama_bank"],
+        atasNama: json["atas_nama"],
+        cetakUndangan: json["cetak_undangan"].toString(),
       );
-
-  static Future<NikBaru> connectToApi() async {
-    String url =
-        "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/?nik=21";
-
-    var urlResult = await http.get(Uri.parse(url));
-    var jsonObject = json.decode(urlResult.body);
-    var nikData = (jsonObject as Map<String, dynamic>)['data'];
-
-    return NikBaru.fromJson(nikData);
-  }
 
   Map<String, dynamic> toJson() => {
         "NIK": nik,
         "NAMA": nama,
-        "TANGGALAHIR":
-            "${tanggalahir.year.toString().padLeft(4, '0')}-${tanggalahir.month.toString().padLeft(2, '0')}-${tanggalahir.day.toString().padLeft(2, '0')}",
+        "TANGGALAHIR": tanggalahir,
         "JENISKELAMIN": jeniskelamin,
         "NAMAJENISKELAMIN": namajeniskelamin,
         "ALAMAT_NAMAJALAN": alamatNamajalan,
@@ -172,5 +171,9 @@ class NikBaru {
         "KDSATKER": kdsatker,
         "JENISUSAHA": jenisusaha,
         "STATUS": status,
+        "no_rekening_bank": noRekeningBank,
+        "nama_bank": namaBank,
+        "atas_nama": atasNama,
+        "cetak_undangan": cetakUndangan,
       };
 }

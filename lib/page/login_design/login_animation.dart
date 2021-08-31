@@ -248,6 +248,8 @@ class _LoginAnimationState extends State<LoginAnimation>
           },
         );
         if (response.statusCode == 200) {
+          // SharedPreferences prefs = await SharedPreferences.getInstance();
+          // prefs.setBool("isLoggedIn", true);
           Token().saveToken(response.body);
           print('Token : ' + response.body);
           setState(() {

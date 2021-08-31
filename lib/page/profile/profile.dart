@@ -61,9 +61,8 @@ class _ProfilePageState extends State<ProfilePage>
     return Scaffold(
       backgroundColor: Colors.white,
       body: FutureBuilder<Profile>(
-        future: futureProfile, // a previously-obtained Future<String> or null
+        future: futureProfile,
         builder: (context, snapshot) {
-          // List<Widget> children;
           if (snapshot.hasData) {
             return _buildBody(snapshot.data);
           } else if (snapshot.hasError) {
@@ -339,22 +338,6 @@ class _ProfilePageState extends State<ProfilePage>
       ),
     );
   }
-
-  // Widget _buildLogOut() {
-  //   return Center(
-  //     child: IconButton(
-  //       onPressed: () async {
-  //         await Token().removeToken();
-  //         Get.offAll(() => LoginAnimation());
-  //       },
-  //       icon: Icon(
-  //         Icons.power_settings_new,
-  //         color: Colors.red,
-  //         size: 70,
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _buildLogOut() {
     return Stack(

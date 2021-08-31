@@ -3,19 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:puskeu/page/profile/profile.dart';
 import 'package:puskeu/page/scan/scan.dart';
 import 'package:puskeu/page/search/search_page.dart';
+import 'package:puskeu/penerima/penerima.dart';
 
 class CurveBar extends StatefulWidget {
   _CurveBarState createState() => _CurveBarState();
 }
 
 class _CurveBarState extends State<CurveBar> {
-  int _pageIndex = 0;
+  int _pageIndex = 1;
 
   final SearchPage _search = SearchPage();
   final ScanPage _scan = ScanPage();
-  final ProfilePage _profile = ProfilePage();
+  final PenerimaPage _penerima = PenerimaPage();
 
-  Widget _tampilPageIndex = new SearchPage();
+  // final ProfilePage _profile = ProfilePage();
+
+  Widget _tampilPageIndex = new ScanPage();
 
   Widget _choosenPage(int page) {
     switch (page) {
@@ -26,8 +29,11 @@ class _CurveBarState extends State<CurveBar> {
         return _scan;
         break;
       case 2:
-        return _profile;
+        return _penerima;
         break;
+      // case 3:
+      //   return _profile;
+      //   break;
       default:
         return Container(
           child: Center(

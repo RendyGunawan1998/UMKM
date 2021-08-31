@@ -1,10 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:puskeu/extra_screen/curve_bar.dart';
 import 'package:puskeu/model/save_token.dart';
 import 'package:puskeu/model/scan_model.dart';
+import 'package:puskeu/page/add_photo/photo_copy.dart';
 import 'package:qrscan/qrscan.dart' as scanner;
 import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
 
 class ScanPage extends StatefulWidget {
   @override
@@ -13,12 +17,20 @@ class ScanPage extends StatefulWidget {
 
 class _ScanPageState extends State<ScanPage> {
   String textResult = "Hasil QR Scan";
+  String scan = "Scan Disini";
   var temp = "";
   String nikScan = "Belum tersedia \nScan Terlebih dahulu";
+  bool _cekValidasiDone = false;
+  bool _tampHasil;
 
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -34,9 +46,13 @@ class _ScanPageState extends State<ScanPage> {
         ),
         // backgroundColor: Colors.blueGrey[200],
         elevation: 0,
-        title: Row(
+        title: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            Text("Scan"),
+            Image.asset(
+              "assets/images/presisi.png",
+              width: 200,
+            ),
           ],
         ),
       ),
@@ -53,12 +69,19 @@ class _ScanPageState extends State<ScanPage> {
             ),
             OutlinedButton(
               onPressed: () async {
-                textResult = await scanner.scan();
-                // final splitNames = textResult.split(';');
-                // List splitList;
-                // for (int i = 0; i < textResult.length; i++) {
-                //   splitList.add(splitNames[i].trim());
-                // }
+                var cameraStatus = await Permission.camera.status;
+                if (cameraStatus.isGranted) {
+                  textResult = await scanner.scan();
+                  print(textResult);
+                  // return textResult;
+                } else {
+                  var isGrant = await Permission.camera.request();
+                  if (isGrant.isGranted) {
+                    textResult = await scanner.scan();
+                    print(textResult);
+                    // return textResult;
+                  }
+                }
                 print(textResult);
                 // print(splitList);
                 var temp = textResult.split(";");
@@ -67,26 +90,32 @@ class _ScanPageState extends State<ScanPage> {
                 print(temp[1].trim());
                 print(temp[2].trim());
                 nikScan = temp[0].trim();
-                _cekValidasi(temp[0].trim());
-
-                setState(() {
-                  // Get.to(() => ScanResult(value: temp[0].trim()));
-                });
+                _cekValidasi(temp[2].trim(), temp[0].trim());
               },
-              child: Text("Scan Disini"),
+              child: Text(scan),
             ),
             SizedBox(
-              height: 20,
+              height: 10,
             ),
+            _tampHasil == true
+                ? OutlinedButton(
+                    onPressed: () {
+                      Get.to(() => PhotoPage(nikScan));
+                    },
+                    child: Text("Upload Foto"))
+                : Container(),
           ],
         ),
       ),
     );
   }
 
-  Future<String> _cekValidasi(String nik) async {
+  Future<String> _cekValidasi(String uid, String _cekNIK) async {
+    // String url =
+    //     'https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/qr/' + uid;
+
     String url =
-        'https://app.puskeu.polri.go.id:2216/umkm/web/penerima/QR/' + nik;
+        'https://app.puskeu.polri.go.id:2216/umkm/web/penerima/qr_scan/' + uid;
 
     var response = await http.get(
       Uri.parse(url),
@@ -99,13 +128,74 @@ class _ScanPageState extends State<ScanPage> {
     //var toJson = jsonDecode(response.body);
     if (response.statusCode == 200) {
       print(response.body);
-      _showAlertDialoSuccess(context, response.statusCode);
+      var tamp = json.decode(response.body);
+      print("ini debug validasi: " + _cekNIK);
+      print(tamp["NIK"]);
+      // kondisi NIK
+      _cekNIK == tamp["NIK"]
+          ? _showAlertDialoSuccess(context)
+          : showAlertDialog(context, response.body);
+      // Kondisi muncul button
+      _cekNIK == tamp["NIK"]
+          ? _cekValidasiDone = true
+          : _cekValidasiDone = false;
+      setState(() {
+        scan = "Scan Ulang";
+        _tampHasil = _cekValidasiDone;
+        print("ini hasil tamp");
+        print(_tampHasil);
+        return _tampHasil;
+      });
+      print(_cekValidasiDone);
       return response.body;
     } else {
-      showAlertDialog(context, response.statusCode);
+      showAlertDialog(context, response.body);
       throw Exception('Failed to validate');
     }
   }
+}
+
+showAlertDialog(BuildContext context, String err) {
+  Widget okButton = TextButton(
+    child: Text("OK"),
+    onPressed: () => Get.offAll(() => CurveBar()),
+  );
+  AlertDialog alert = AlertDialog(
+    title: Text("Masalah"),
+    content: Text("Data tidak ditemukan"),
+    // Text(
+    //     "Data tidak cocok \nData tidak sesuai dengan yang ada di database"),
+    actions: [
+      okButton,
+    ],
+  );
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
+
+_showAlertDialoSuccess(BuildContext context) {
+  Widget okButton = TextButton(
+      child: Text("OK"),
+      onPressed: () {
+        Navigator.pop(context);
+      });
+  AlertDialog alert = AlertDialog(
+    title: Text("Berhasil"),
+    content: Text("Data cocok"),
+    actions: [
+      okButton,
+    ],
+  );
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
 }
 
 class ScanResult extends StatefulWidget {
@@ -191,45 +281,4 @@ class _ScanResultState extends State<ScanResult> {
       ],
     ));
   }
-}
-
-showAlertDialog(BuildContext context, int err) {
-  Widget okButton = TextButton(
-    child: Text("OK"),
-    onPressed: () => Navigator.pop(context),
-  );
-  AlertDialog alert = AlertDialog(
-    title: Text("Error"),
-    content: Text("Data tidak cocok"),
-    actions: [
-      okButton,
-    ],
-  );
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-}
-
-_showAlertDialoSuccess(BuildContext context, int err) {
-  Widget okButton = TextButton(
-      child: Text("OK"),
-      onPressed: () {
-        Navigator.pop(context);
-      });
-  AlertDialog alert = AlertDialog(
-    title: Text("Success"),
-    content: Text("Data cocok"),
-    actions: [
-      okButton,
-    ],
-  );
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
 }

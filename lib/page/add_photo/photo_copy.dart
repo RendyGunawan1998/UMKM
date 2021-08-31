@@ -12,12 +12,12 @@ import 'package:location/location.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
 import 'package:puskeu/model/new_nik.dart';
 import 'package:puskeu/model/save_token.dart';
-import 'package:puskeu/page/search/search_page.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 
 class PhotoPage extends StatefulWidget {
-  final NikBaru nikBaru;
-  PhotoPage(this.nikBaru);
+  // final NikBaru nikBaru;
+  final String text;
+  PhotoPage(this.text);
   @override
   _PhotoPageState createState() => _PhotoPageState();
 }
@@ -26,8 +26,9 @@ class _PhotoPageState extends State<PhotoPage> {
   // ============================= Variabel ====================
   File _selectedImage;
   bool _inProgress = false;
-  // String tempJenis = "1";
+  final selectedIndexes = [];
 
+  Future<List<NikBaru>> futureNik;
   var nikTXT = TextEditingController();
   var jenis = TextEditingController();
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -44,13 +45,15 @@ class _PhotoPageState extends State<PhotoPage> {
   // ];
   List jenisPhoto = [];
   String _mySelection;
+  bool isChecked = true;
   // ============================= Variabel ====================
 
   // ============================= Init ====================
   @override
   void initState() {
-    nikTXT.text = widget.nikBaru.nik;
-    this._getJenisPhoto();
+    nikTXT.text = widget.text;
+    futureNik = fetchNik(nikTXT.text);
+    this._getJenisPhoto(widget.text);
     super.initState();
   }
 
@@ -62,8 +65,38 @@ class _PhotoPageState extends State<PhotoPage> {
   // ============================= Init ====================
 
   // ============================= Function ====================
-  Future<String> _getJenisPhoto() async {
-    String url = 'https://app.puskeu.polri.go.id:2216/umkm/web/jenis-foto/';
+  Future<List<NikBaru>> fetchNik(String cariNIK) async {
+    var response = await http.get(
+      // Uri.parse(
+      //     "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/2125"),
+      Uri.parse(
+          "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/?nik=" +
+              cariNIK),
+
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + await Token().getAccessToken(),
+      },
+    );
+    print(Token().getAccessToken());
+    print(response);
+    if (response.statusCode == 200) {
+      // return Nik.fromJson(json.decode(response.body));
+      print(response.body);
+
+      final res = json.decode(response.body);
+      final data = res['data'];
+      return (data as List).map((data) => NikBaru.fromJson(data)).toList();
+    } else {
+      print(response.body);
+      throw Exception('Failed to load data');
+    }
+  }
+
+  Future<String> _getJenisPhoto(String nik) async {
+    String url =
+        'https://app.puskeu.polri.go.id:2216/umkm/mobile/jenis-foto/' + nik;
 
     var response = await http.get(
       Uri.parse(url),
@@ -155,6 +188,7 @@ class _PhotoPageState extends State<PhotoPage> {
     }
   }
 
+  // =============================Fungsi upload ============================
   Future<String> addTreatment(String nik, String jenis, double latitude,
       double longitude, String photo) async {
     // SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -191,8 +225,8 @@ class _PhotoPageState extends State<PhotoPage> {
       return "Berhasil";
     } else {
       print(response.body);
-      _showAlertDialog(context, response.statusCode);
-      return "gagal";
+      _showAlertDialog(context, response.body);
+      throw (json.decode(response.body));
     }
   }
   // ============================= Function ====================
@@ -214,24 +248,32 @@ class _PhotoPageState extends State<PhotoPage> {
           elevation: 0,
           title: Row(
             children: <Widget>[
-              Text("Click | Pick | Crop"),
+              Text("Upload Dokumen"),
             ],
           ),
         ),
-        bottomNavigationBar: MaterialButton(
-          color: Colors.blue[200],
-          onPressed: () {
-            print(nikTXT.text);
-            print(_mySelection);
-            print(_locationData.longitude);
-            print(_locationData.latitude);
-            print(_selectedImage.path);
-            addTreatment(nikTXT.text, _mySelection, _locationData.latitude,
-                _locationData.longitude, _selectedImage.path);
-          },
-          child: Text("Upload"),
-        ),
+        bottomNavigationBar: _mySelection != null && _selectedImage != null
+            ? MaterialButton(
+                color: Colors.blue[200],
+                onPressed: () {
+                  print(nikTXT.text);
+                  print(_mySelection);
+                  print(_locationData.longitude);
+                  print(_locationData.latitude);
+                  print(_selectedImage.path);
+                  addTreatment(
+                      nikTXT.text,
+                      _mySelection,
+                      _locationData.latitude,
+                      _locationData.longitude,
+                      _selectedImage.path);
+                },
+                child: Text("Upload"),
+              )
+            : _buildBody(context),
         body: _buildBody(context));
+
+    // _buildBody(context));
   }
 
   Widget _buildBody(BuildContext context) {
@@ -244,6 +286,20 @@ class _PhotoPageState extends State<PhotoPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               getImageWidget(),
+              // data[index].status.contains == 4
+              //     ?
+              // MaterialButton(
+              //         minWidth: 120,
+              //         onPressed: () {
+              //           getImage(ImageSource.camera);
+              //           _getLocation();
+              //         },
+              //         color: Colors.green,
+              //         child: Text("Take Photo"),
+              //       )
+              //     : Center(
+              //         child: Text("Tidak bisa foto, status harus 4"),
+              //       ),
               MaterialButton(
                 minWidth: 120,
                 onPressed: () {
@@ -251,12 +307,12 @@ class _PhotoPageState extends State<PhotoPage> {
                   _getLocation();
                 },
                 color: Colors.green,
-                child: Text("Take Photo"),
+                child: Text("Ambil Foto"),
               ),
               MaterialButton(
                 minWidth: 120,
                 color: Colors.green,
-                child: Text("Delete"),
+                child: Text("Hapus Foto"),
                 onPressed: () {
                   reset();
                 },
@@ -282,7 +338,19 @@ class _PhotoPageState extends State<PhotoPage> {
                 value: _mySelection,
                 items: jenisPhoto.map((item) {
                   return DropdownMenuItem(
-                    child: Text(item['NAMAFOTO']),
+                    enabled: item['NIK'] == "1" ? false : true,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(item['NAMAFOTO']),
+                        item["NIK"] == "1"
+                            ? Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              )
+                            : Container(),
+                      ],
+                    ),
                     value: item['KODEFOTO'].toString(),
                   );
                 }).toList(),
@@ -308,26 +376,11 @@ class _PhotoPageState extends State<PhotoPage> {
     );
   }
   // ============================= Body ====================
-}
 
-// ============================= Init ====================
-class TextValue {
-  static showBulan(String display) {
-    if (display == 'KTP') {
-      return 1;
-    } else if (display == 'KTP') {
-      return 2;
-    } else if (display == 'SITU') {
-      return 123;
-    } else if (display == 'SIUP') {
-      return 1111;
-    }
-  }
 }
-// ============================= Init ====================
 
 // ============================= Function Alert ====================
-_showAlertDialog(BuildContext context, int err) {
+_showAlertDialog(BuildContext context, String err) {
   Widget okButton = TextButton(
     child: Text("OK"),
     onPressed: () {
@@ -335,8 +388,8 @@ _showAlertDialog(BuildContext context, int err) {
     },
   );
   AlertDialog alert = AlertDialog(
-    title: Text("Error"),
-    content: Text("Data gagal dimasukkan / Data sudah pernah dimasukkan"),
+    title: Text("Warning"),
+    content: Text(err),
     actions: [
       okButton,
     ],
@@ -351,9 +404,11 @@ _showAlertDialog(BuildContext context, int err) {
 
 _showAlertDialoSuccess(BuildContext context, int err) {
   Widget okButton = TextButton(
-    child: Text("OK"),
-    onPressed: () => Get.offAll(() => CurveBar()),
-  );
+      child: Text("OK"),
+      onPressed: () {
+        // Navigator.pop(context);
+        Get.offAll(() => CurveBar());
+      });
   AlertDialog alert = AlertDialog(
     title: Text("Success"),
     content: Text("Data berhasil diinput"),
