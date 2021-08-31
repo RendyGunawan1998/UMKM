@@ -408,8 +408,8 @@ class _PenerimaPageState extends State<PenerimaPage> {
                       if (response.statusCode == 200) {
                         // SharedPreferences prefs = await SharedPreferences.getInstance();
                         // prefs.setBool("isLoggedIn", true);
-                        Token().saveToken(response.body);
-                        print('Token : ' + response.body);
+                        // Token().saveToken(response.body);
+                        print('respone : ' + response.body);
                         print("UPLOAD SUKSES");
                         setState(() {
                           nikTamp = _nikTxt.text;
@@ -444,7 +444,8 @@ class _PenerimaPageState extends State<PenerimaPage> {
                   child: OutlinedButton(
                       onPressed: () {
                         Get.to(() => PhotoPenerima(
-                              nikBaru: nikTamp,
+                              // nikBaru: nikTamp,
+                              nikBaru: "1234567890123485",
                             ));
                       },
                       child: Text("Upload Data Calon Penerima")),

@@ -3,14 +3,15 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
+import 'package:http/http.dart' as http;
 import 'package:puskeu/model/save_token.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:shared_preferences/shared_preferences.dart';
 
 class PhotoPenerima extends StatefulWidget {
@@ -42,12 +43,21 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
   // ============================= Init ====================
   @override
   void initState() {
+    super.initState();
     // nikTXT.text = widget.nikBaru.nik;
     // this._getJenisPhoto(widget.nikBaru.nik);
+    // print(widget.nikBaru);
     nikTXT.text = widget.nikBaru;
     print("ini nik di fungsi foto penerima : ${nikTXT.text}");
-    this._getJenisPhoto(widget.nikBaru);
-    super.initState();
+    getJenisPhoto(widget.nikBaru);
+  }
+
+  Future<void> getJenisPhoto(String nikBaru) async {
+    try {
+      await _getJenisPhoto(widget.nikBaru);
+    } catch (e) {
+      print(e);
+    }
   }
 
   reset() {
@@ -65,15 +75,25 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
         'https://app.puskeu.polri.go.id:2216/umkm/mobile/jenis-foto/' + nik;
     print(url);
 
+    SharedPreferences pref = await SharedPreferences.getInstance();
+
+    final data = pref.getString('access_token');
+    print(data);
     var response = await http.get(
       Uri.parse(url),
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": "Bearer" + await Token().getAccessToken(),
+        // "Authorization":
+        //     "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJVVUlEIjoiY2JmYTJiOTgtY2NkZi00YWEyLTlmMTAtMzY5MzYzMTIzYTk5IiwiZXhwIjoxNjMwNDk5MzU1LCJwZXR1Z2FzIjp7Ik5SUCI6IjY5MDQwMDY5IiwiTkFNQSI6IlNPTk5ZIiwiUEFOR0tBVCI6IklQVFUiLCJLRFNBVEtFUiI6IjY0MTE5NCIsIk5PTU9SSFAiOiIwODEyMzQ1NTY3NjcifX0.MIKHlqpwENrCAQQ7RjzqZQTQHfLN2qHWPB0bNdhNRb8",
+        "Authorization": "Bearer " + await Token().getAccessToken(),
       },
     );
-    print(response.body);
+    // var _token = await Token().getAccessToken();
+    // print("token : $_token");
+    // print(response);
+    // print("OKKKKKKK");
+    // return "OK";
     if (response.statusCode == 200) {
       print(response.body);
       var responeBody = jsonDecode(response.body);
