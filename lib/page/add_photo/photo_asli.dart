@@ -130,9 +130,9 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
       File cropped = await ImageCropper.cropImage(
         sourcePath: image.path,
         aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-        compressQuality: 50,
-        maxHeight: 200,
-        maxWidth: 200,
+        compressQuality: 100,
+        maxHeight: 500,
+        maxWidth: 500,
         compressFormat: ImageCompressFormat.jpg,
         androidUiSettings: AndroidUiSettings(
             toolbarColor: Colors.deepOrange.shade900,

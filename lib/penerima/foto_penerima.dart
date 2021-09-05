@@ -35,8 +35,8 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
   PermissionStatus _permissionGranted;
   LocationData _locationData;
   List jenisPhoto = [];
+  List filteredJP = [];
   String _mySelection;
-  bool isChecked = true;
   // ============================= Variabel ====================
 
   // ============================= Init ====================
@@ -46,8 +46,17 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
     // this._getJenisPhoto(widget.nikBaru.nik);
     nikTXT.text = widget.nikBaru;
     print("ini nik di fungsi foto penerima : ${nikTXT.text}");
-    this._getJenisPhoto(widget.nikBaru);
+    getJenisPhoto(widget.nikBaru);
+
     super.initState();
+  }
+
+  void getJenisPhoto(String nik) async {
+    try {
+      await _getJenisPhoto(widget.nikBaru);
+    } catch (e) {
+      print(e);
+    }
   }
 
   reset() {
@@ -70,7 +79,9 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": "Bearer" + await Token().getAccessToken(),
+        // HttpHeaders.authorizationHeader:
+        //     "Bearer " + await Token().getAccessToken(),
+        "Authorization": "Bearer " + await Token().getAccessToken(),
       },
     );
     print(response.body);
@@ -80,6 +91,10 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
 
       setState(() {
         jenisPhoto = responeBody;
+        filteredJP = jenisPhoto
+            .where((data) => data["NAMAFOTO"] == "BUKTI CALON PENERIMA")
+            .toList();
+        print("ini filter jp : $filteredJP");
       });
 
       return "Get Jenis Foto Success";
@@ -133,9 +148,9 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
       File cropped = await ImageCropper.cropImage(
         sourcePath: image.path,
         aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-        compressQuality: 50,
-        maxHeight: 200,
-        maxWidth: 200,
+        compressQuality: 100,
+        maxHeight: 500,
+        maxWidth: 500,
         compressFormat: ImageCompressFormat.jpg,
         androidUiSettings: AndroidUiSettings(
             toolbarColor: Colors.deepOrange.shade900,
@@ -159,7 +174,12 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
   // =============================Fungsi upload ============================
   Future<String> addTreatment(String nik, String jenis, double latitude,
       double longitude, String photo) async {
-    // SharedPreferences preferences = await SharedPreferences.getInstance();
+    print("ini data di fungsi addTreadment");
+    print(nik);
+    print(jenis);
+    print(latitude);
+    print(longitude);
+    print(photo);
 
     Map<String, String> headers = {
       "Accept": "application/json",
@@ -167,9 +187,16 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
       "Authorization": "Bearer " + await Token().getAccessToken(),
     };
 
+    print("ini data headers : $headers");
+    var token = Token().getAccessToken();
+    print("ini token di fungsi addTreadment: $token");
+
     var uri = Uri.parse(
         'https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima-foto/');
     var request = new http.MultipartRequest("POST", uri);
+
+    print("ini uri di fungsi addTreadment: $uri");
+    print("ini req di fungsi addTreadment: $request");
 
     request.headers.addAll(headers);
 
@@ -185,7 +212,8 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
 
     http.Response response =
         await http.Response.fromStream(await request.send());
-    // print(response);
+    print("ini response : $response");
+    print("ini response body : ${response.body}");
     if (response.statusCode == 200) {
       // final data = json.decode(response.body);
       print(response.body);
@@ -258,6 +286,12 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
                 onPressed: () {
                   getImage(ImageSource.camera);
                   _getLocation();
+                  print("Ini print di fungsi ambil foto");
+                  print(nikTXT.text);
+                  print(_mySelection);
+                  print(_locationData.longitude);
+                  print(_locationData.latitude);
+                  print(_selectedImage.path);
                 },
                 color: Colors.green,
                 child: Text("Ambil Foto"),
@@ -288,28 +322,31 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
                 isExpanded: true,
                 hint: Text('Jenis Foto'),
                 value: _mySelection,
-                items: jenisPhoto.map((item) {
+                items: filteredJP.map((item) {
                   return DropdownMenuItem(
-                    enabled: item['NIK'] == "1" ? false : true,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(item['NAMAFOTO']),
-                        item["NIK"] == "1"
-                            ? Icon(
-                                Icons.check_circle,
-                                color: Colors.green,
-                              )
-                            : Container(),
-                      ],
-                    ),
-                    value: item['KODEFOTO'].toString(),
-                  );
+                      enabled: item['NIK'] == "1" ? false : true,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(item['NAMAFOTO']),
+                          // item['NAMAFOTO'] == "BUKTI CALON PENERIMA"
+                          //     ?
+                          //     : Container(),
+                          item["NIK"] == "1"
+                              ? Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                )
+                              : Container(),
+                        ],
+                      ),
+                      value: item['KODEFOTO'].toString());
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
                     _mySelection = value;
                     print(_mySelection);
+                    print("ini value jenis foto $value");
                   });
                 },
               ),
@@ -363,7 +400,7 @@ _showAlertFieldKosong(BuildContext context) {
       });
   AlertDialog alert = AlertDialog(
     title: Text("Masalah"),
-    content: Text("Data harus diisi dulu"),
+    content: Text("Data gagal di upload"),
     actions: [
       okButton,
     ],

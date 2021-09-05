@@ -20,13 +20,14 @@ class _ProfilePageState extends State<ProfilePage>
 
   Future<Profile> getProfile() async {
     String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/profil/';
+    print("ini url profile di profile : $url");
 
     var response = await http.get(
       Uri.parse(url),
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": "Bearer" + await Token().getAccessToken(),
+        "Authorization": "Bearer " + await Token().getAccessToken(),
       },
     );
     //var toJson = jsonDecode(response.body);

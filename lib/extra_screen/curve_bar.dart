@@ -16,7 +16,7 @@ class _CurveBarState extends State<CurveBar> {
   final ScanPage _scan = ScanPage();
   final PenerimaPage _penerima = PenerimaPage();
 
-  // final ProfilePage _profile = ProfilePage();
+  final ProfilePage _profile = ProfilePage();
 
   Widget _tampilPageIndex = new ScanPage();
 
@@ -31,9 +31,9 @@ class _CurveBarState extends State<CurveBar> {
       case 2:
         return _penerima;
         break;
-      // case 3:
-      //   return _profile;
-      //   break;
+      case 3:
+        return _profile;
+        break;
       default:
         return Container(
           child: Center(
@@ -55,23 +55,27 @@ class _CurveBarState extends State<CurveBar> {
         items: <Widget>[
           Icon(
             Icons.search,
-            color: Colors.white,
+            color: Colors.black,
           ),
           Icon(
             Icons.camera,
-            color: Colors.white,
+            color: Colors.black,
+          ),
+          Icon(
+            Icons.person_add,
+            color: Colors.black,
           ),
           CircleAvatar(
             backgroundColor: Colors.transparent,
             child: Icon(
               Icons.person,
-              color: Colors.white70,
+              color: Colors.black,
             ),
             radius: 14,
           ),
         ],
         color: Colors.brown[400],
-        buttonBackgroundColor: Colors.grey[200],
+        buttonBackgroundColor: Colors.transparent,
         backgroundColor: Colors.transparent,
         animationCurve: Curves.bounceInOut,
         animationDuration: Duration(milliseconds: 100),

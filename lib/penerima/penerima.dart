@@ -23,6 +23,7 @@ class _PenerimaPageState extends State<PenerimaPage> {
   TextEditingController _bulanTxt = TextEditingController();
   TextEditingController _tanggalTxt = TextEditingController();
   TextEditingController _ttlTxt = TextEditingController();
+  TextEditingController _jenisKelamin = TextEditingController();
   TextEditingController _nibTxt = TextEditingController();
   TextEditingController _alamat = TextEditingController();
   TextEditingController _alamatUsaha = TextEditingController();
@@ -51,21 +52,9 @@ class _PenerimaPageState extends State<PenerimaPage> {
   List<String> jenisKelamin = <String>['Laki', 'Perempuan'];
   List years = ["2021"];
 
-  String validateNIK(value) {
-    if (value.isEmpty) {
-      return "NIK tidak boleh kosong";
-    } else if (value.length <= 16) {
-      return "NIK tidak boleh kurang dari 16 angka";
-    } else if (value.length >= 16) {
-      return "NIK tidak boleh lebih dari 16 angka";
-    } else {
-      return null;
-    }
-  }
-
-  String validateNama(value) {
-    if (value.isEmpty) {
-      return "Nama tidak boleh kosong";
+  String validate(value) {
+    if (value == null || value.isEmpty || value == "") {
+      return "Field tidak boleh kosong";
     } else {
       return null;
     }
@@ -73,15 +62,19 @@ class _PenerimaPageState extends State<PenerimaPage> {
 
   Future<Profile> getDataSatker() async {
     String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/profil/';
+    print("ini url profile di pendataan : $url");
 
     var response = await http.get(
       Uri.parse(url),
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": "Bearer" + await Token().getAccessToken(),
+        "Authorization": "Bearer " + await Token().getAccessToken(),
       },
     );
+    var debugBearer = await Token().getAccessToken();
+    print(debugBearer);
+    print(response.body);
     //var toJson = jsonDecode(response.body);
     if (response.statusCode == 200) {
       print(response.body);
@@ -166,6 +159,7 @@ class _PenerimaPageState extends State<PenerimaPage> {
 
   @override
   void initState() {
+    _namaPetugas.text = namaSatker;
     futureProfile = getDataSatker();
     getYears();
     now();
@@ -229,12 +223,48 @@ class _PenerimaPageState extends State<PenerimaPage> {
 
   Widget _getFormField(Profile data) {
     return Form(
+      autovalidate: true,
       key: formkey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         // mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          _getNik(),
+          TextFormField(
+            onTap: () {
+              setState(() {
+                namaSatker = data.nama;
+                noHpPetugas = data.nomorhp;
+                nrpSatker = data.nrp;
+                _namaPetugas.text = namaSatker;
+                _noHPPetugas.text = noHpPetugas;
+                _noAnggota.text = nrpSatker;
+              });
+            },
+            keyboardType: TextInputType.number,
+            scrollPadding: EdgeInsets.only(left: 10),
+            decoration: InputDecoration(
+              labelText: "NIK",
+              hintText: "Masukkan NIK",
+              border:
+                  UnderlineInputBorder(borderRadius: BorderRadius.circular(5)),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty || value == "") {
+                return "NIK tidak boleh kosong";
+              } else if (value.length < 16) {
+                return "NIK tidak boleh kurang dari 16 angka";
+              } else if (value.length > 16) {
+                return "NIK tidak boleh lebih dari 16 angka";
+              } else {
+                return null;
+              }
+            },
+            controller: _nikTxt,
+            onSaved: (value) {
+              _nikTxt.text = value;
+              nikTamp = _nikTxt.text;
+            },
+          ),
           SizedBox(
             height: 7,
           ),
@@ -280,20 +310,17 @@ class _PenerimaPageState extends State<PenerimaPage> {
           TextFormField(
             readOnly: true,
             decoration: InputDecoration(
-                labelText: "Nama Petugas Pendata",
                 hintText: "Klik Disini",
+                labelText: "Nama Petugas Pendata",
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20))),
             keyboardType: TextInputType.number,
             controller: _namaPetugas,
-            onTap: () {
+            onSaved: (value) {
               setState(() {
                 namaSatker = data.nama;
                 _namaPetugas.text = namaSatker;
               });
-            },
-            onSaved: (value) {
-              _namaPetugas.text = value;
             },
           ),
           SizedBox(
@@ -308,12 +335,13 @@ class _PenerimaPageState extends State<PenerimaPage> {
                     borderRadius: BorderRadius.circular(20))),
             keyboardType: TextInputType.number,
             controller: _noAnggota,
-            onTap: () {
-              setState(() {
-                nrpSatker = data.nrp;
-                _noAnggota.text = nrpSatker;
-              });
-            },
+            // validator: validate,
+            // onTap: () {
+            //   setState(() {
+            //     nrpSatker = data.nrp;
+            //     _noAnggota.text = nrpSatker;
+            //   });
+            // },
             onSaved: (value) {
               _noAnggota.text = value;
             },
@@ -322,12 +350,12 @@ class _PenerimaPageState extends State<PenerimaPage> {
             height: 7,
           ),
           TextFormField(
-            onTap: () {
-              setState(() {
-                noHpPetugas = data.nomorhp;
-                _noHPPetugas.text = noHpPetugas;
-              });
-            },
+            // onTap: () {
+            //   setState(() {
+            //     noHpPetugas = data.nomorhp;
+            //     _noHPPetugas.text = noHpPetugas;
+            //   });
+            // },
             readOnly: true,
             decoration: InputDecoration(
                 labelText: "No HP Petugas Pendata",
@@ -336,6 +364,7 @@ class _PenerimaPageState extends State<PenerimaPage> {
                     borderRadius: BorderRadius.circular(20))),
             keyboardType: TextInputType.number,
             controller: _noHPPetugas,
+            // validator: validate,
             onSaved: (value) {
               _noHPPetugas.text = value;
             },
@@ -361,8 +390,8 @@ class _PenerimaPageState extends State<PenerimaPage> {
                     print("Ini bulan : ${_bulanTxt.text}");
                     print("Ini tanggal : ${_tanggalTxt.text}");
 
-                    tampJK = jkValue[0].toUpperCase();
-                    print("Ini jenis kelamin : $tampJK");
+                    // tampJK = _jenisKelamin.text[0].toUpperCase();
+                    print("Ini jenis kelamin : ${_jenisKelamin.text}");
                     print("Ini alamat : ${_alamat.text}");
                     print("Ini nib : ${_nibTxt.text}");
                     print("Ini jenis usaha : ${_jenisUsaha.text}");
@@ -380,7 +409,7 @@ class _PenerimaPageState extends State<PenerimaPage> {
                       'nik': _nikTxt.text,
                       'nama': _namaTxt.text,
                       'tanggal_lahir': _ttlTxt.text,
-                      'jk': tampJK,
+                      'jk': _jenisKelamin.text,
                       'alamat': _alamat.text,
                       'nib': _nibTxt.text,
                       'jenis_usaha': _jenisUsaha.text,
@@ -408,7 +437,7 @@ class _PenerimaPageState extends State<PenerimaPage> {
                       if (response.statusCode == 200) {
                         // SharedPreferences prefs = await SharedPreferences.getInstance();
                         // prefs.setBool("isLoggedIn", true);
-                        Token().saveToken(response.body);
+                        // Token().saveToken(response.body);
                         print('Token : ' + response.body);
                         print("UPLOAD SUKSES");
                         setState(() {
@@ -455,31 +484,6 @@ class _PenerimaPageState extends State<PenerimaPage> {
     );
   }
 
-  Widget _getNik() {
-    return TextFormField(
-      scrollPadding: EdgeInsets.only(left: 10),
-      decoration: InputDecoration(
-        labelText: "NIK",
-        hintText: "Masukkan NIK",
-        border: UnderlineInputBorder(borderRadius: BorderRadius.circular(5)),
-      ),
-      validator: (value) {
-        if (value.isEmpty) {
-          return "NIK tidak boleh kosong";
-        } else if (value.length <= 15) {
-          return "NIK tidak boleh kurang atau lebih dari 16 angka";
-        } else {
-          return null;
-        }
-      },
-      controller: _nikTxt,
-      onSaved: (value) {
-        _nikTxt.text = value;
-        nikTamp = _nikTxt.text;
-      },
-    );
-  }
-
   Widget _getNama() {
     return TextFormField(
       decoration: InputDecoration(
@@ -488,7 +492,7 @@ class _PenerimaPageState extends State<PenerimaPage> {
         border: UnderlineInputBorder(borderRadius: BorderRadius.circular(5)),
       ),
       validator: (value) {
-        if (value.isEmpty) {
+        if (value == null || value.isEmpty || value == "") {
           return "Nama tidak boleh kosong";
         } else {
           return null;
@@ -508,15 +512,34 @@ class _PenerimaPageState extends State<PenerimaPage> {
       children: [
         Expanded(
           flex: 3,
-          child: DropdownButton(
+          child: DropdownButtonFormField(
             hint: Text("Tanggal"),
             isExpanded: true,
             value: currentDay,
             iconSize: 25,
-            // elevation: 16,
+            // validator: (value) {
+            //   if (value == null || value.isEmpty || value == "") {
+            //     return "Tanggal kosong";
+            //   } else {
+            //     return null;
+            //   }
+            // },
             onChanged: (value) {
               setState(() {
-                currentDay = value;
+                if (value == null || value.isEmpty || value == "") {
+                  _tanggalTxt.text = "01";
+                } else
+                  currentDay = value;
+                _tanggalTxt.text = currentDay;
+                print(_tanggalTxt.text);
+              });
+            },
+            onSaved: (value) {
+              setState(() {
+                if (value == null || value.isEmpty || value == "") {
+                  _tanggalTxt.text = "01";
+                } else
+                  currentDay = value;
                 _tanggalTxt.text = currentDay;
                 print(_tanggalTxt.text);
               });
@@ -531,31 +554,24 @@ class _PenerimaPageState extends State<PenerimaPage> {
             ).toList(),
           ),
         ),
-        // Expanded(
-        //   child: TextFormField(
-        //     decoration: InputDecoration(
-        //       labelText: "Tanggal ",
-        //       hintText: "Tanggal",
-        //       border:
-        //           OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
-        //     ),
-        //     controller: _tanggalTxt,
-        //     onSaved: (value) {
-        //       _namaTxt.text = value;
-        //     },
-        //   ),
-        // ),
         Text(
           "-",
           style: TextStyle(color: Colors.black, fontSize: 40),
         ),
         Expanded(
           flex: 3,
-          child: DropdownButton(
+          child: DropdownButtonFormField(
             dropdownColor: Colors.white,
             isExpanded: true,
             hint: Text('Bulan'),
             value: currentBulan,
+            // validator: (value) {
+            //   if (value == null || value.isEmpty || value == "") {
+            //     return "Bulan kosong";
+            //   } else {
+            //     return null;
+            //   }
+            // },
             items: dataBulan.map((item) {
               return DropdownMenuItem(
                 child: Text(item['display']),
@@ -564,25 +580,44 @@ class _PenerimaPageState extends State<PenerimaPage> {
             }).toList(),
             onChanged: (value) {
               setState(() {
-                currentBulan = value;
+                if (value == null || value.isEmpty || value == "") {
+                  _bulanTxt.text = "01";
+                } else
+                  currentBulan = value;
                 _bulanTxt.text = currentBulan;
-                print(_bulanTxt.text);
+                print("ini kondisi jika kosong : ${_bulanTxt.text}");
+              });
+            },
+            onSaved: (value) {
+              setState(() {
+                if (value == null || value.isEmpty || value == "") {
+                  _bulanTxt.text = "01";
+                } else
+                  currentBulan = value;
+                _bulanTxt.text = currentBulan;
+                print("ini kondisi jika kosong : ${_bulanTxt.text}");
               });
             },
           ),
         ),
-
         Text(
           "-",
           style: TextStyle(color: Colors.black, fontSize: 40),
         ),
         Expanded(
           flex: 3,
-          child: DropdownButton(
+          child: DropdownButtonFormField(
             dropdownColor: Colors.white,
             isExpanded: true,
             hint: Text('Tahun'),
             value: currentTahun,
+            // validator: (value) {
+            //   if (value == null || value.isEmpty || value == "") {
+            //     return "Tahun kosong";
+            //   } else {
+            //     return null;
+            //   }
+            // },
             items: years.map((item) {
               return DropdownMenuItem(
                 child: Text(item['display']),
@@ -591,8 +626,22 @@ class _PenerimaPageState extends State<PenerimaPage> {
             }).toList(),
             onChanged: (value) {
               setState(() {
-                currentTahun = value;
+                if (value == null || value.isEmpty || value == "") {
+                  _tahunTxt.text = "2021";
+                } else
+                  currentTahun = value;
                 _tahunTxt.text = currentTahun;
+                print("ini kondisi jika kosong : ${_bulanTxt.text}");
+              });
+            },
+            onSaved: (value) {
+              setState(() {
+                if (value == null || value.isEmpty || value == "") {
+                  _tahunTxt.text = "2021";
+                } else
+                  currentTahun = value;
+                _tahunTxt.text = currentTahun;
+                print("ini kondisi jika kosong : ${_bulanTxt.text}");
               });
             },
           ),
@@ -616,15 +665,29 @@ class _PenerimaPageState extends State<PenerimaPage> {
             ),
             Expanded(
               flex: 7,
-              child: DropdownButton(
+              child: DropdownButtonFormField(
                 hint: Text("Jenis Kelamin"),
                 isExpanded: true,
                 value: jkValue,
                 iconSize: 25,
                 // elevation: 16,
+                // validator: validate,
                 onChanged: (value) {
                   setState(() {
-                    jkValue = value;
+                    if (value == null || value.isEmpty || value == "") {
+                      _jenisKelamin.text = "L";
+                    } else
+                      jkValue = value;
+                    _jenisKelamin.text = jkValue;
+                  });
+                },
+                onSaved: (value) {
+                  setState(() {
+                    if (value == null || value.isEmpty || value == "") {
+                      _jenisKelamin.text = "L";
+                    } else
+                      jkValue = value;
+                    _jenisKelamin.text = jkValue;
                   });
                 },
                 items: jenisKelamin.map(
@@ -651,9 +714,13 @@ class _PenerimaPageState extends State<PenerimaPage> {
         hintText: hint,
         border: UnderlineInputBorder(borderRadius: BorderRadius.circular(5)),
       ),
+      // validator: validate,
       controller: _controller,
       onSaved: (value) {
-        _controller.text = value;
+        if (value == null || value.isEmpty || value == "") {
+          _controller.text = "-";
+        } else
+          _controller.text = value;
       },
     );
   }
@@ -666,9 +733,13 @@ class _PenerimaPageState extends State<PenerimaPage> {
         hintText: "Masukkan No Telp",
         border: UnderlineInputBorder(borderRadius: BorderRadius.circular(5)),
       ),
+      // validator: validate,
       controller: _noHP,
       onSaved: (value) {
-        _noHP.text = value;
+        if (value == null || value.isEmpty || value == "") {
+          _noHP.text = "-";
+        } else
+          _noHP.text = value;
       },
     );
   }
@@ -682,7 +753,7 @@ _showAlertDialog(BuildContext context) {
       });
   AlertDialog alert = AlertDialog(
     title: Text("Gagal"),
-    content: Text("Data tidak dapat di upload"),
+    content: Text("NIK sudah terdaftar"),
     actions: [
       okButton,
     ],
