@@ -45,6 +45,7 @@ class _PhotoPageState extends State<PhotoPage> {
   // ];
   List jenisPhoto = [];
   String _mySelection;
+  String tampNIK;
   bool isChecked = true;
   // ============================= Variabel ====================
 
@@ -52,6 +53,7 @@ class _PhotoPageState extends State<PhotoPage> {
   @override
   void initState() {
     nikTXT.text = widget.text;
+    tampNIK = nikTXT.text;
     futureNik = fetchNik(nikTXT.text);
     this._getJenisPhoto(widget.text);
     super.initState();
@@ -166,8 +168,8 @@ class _PhotoPageState extends State<PhotoPage> {
         sourcePath: image.path,
         aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
         compressQuality: 100,
-        maxHeight: 500,
-        maxWidth: 500,
+        maxHeight: 1920,
+        maxWidth: 1080,
         compressFormat: ImageCompressFormat.jpg,
         androidUiSettings: AndroidUiSettings(
             toolbarColor: Colors.deepOrange.shade900,
@@ -237,6 +239,12 @@ class _PhotoPageState extends State<PhotoPage> {
     print(_selectedImage?.lengthSync());
     return Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Get.offAll(() => CurveBar());
+            },
+          ),
           flexibleSpace: Container(
             decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -338,12 +346,12 @@ class _PhotoPageState extends State<PhotoPage> {
                 value: _mySelection,
                 items: jenisPhoto.map((item) {
                   return DropdownMenuItem(
-                    enabled: item['NIK'] == "1" ? false : true,
+                    enabled: item['STSFOTO'] == "1" ? false : true,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(item['NAMAFOTO']),
-                        item["NIK"] == "1"
+                        item["STSFOTO"] == "1"
                             ? Icon(
                                 Icons.check_circle,
                                 color: Colors.green,
@@ -377,50 +385,50 @@ class _PhotoPageState extends State<PhotoPage> {
   }
   // ============================= Body ====================
 
-}
-
 // ============================= Function Alert ====================
-_showAlertDialog(BuildContext context, String err) {
-  Widget okButton = TextButton(
-    child: Text("OK"),
-    onPressed: () {
-      Navigator.pop(context);
-    },
-  );
-  AlertDialog alert = AlertDialog(
-    title: Text("Warning"),
-    content: Text(err),
-    actions: [
-      okButton,
-    ],
-  );
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-}
-
-_showAlertDialoSuccess(BuildContext context, int err) {
-  Widget okButton = TextButton(
+  _showAlertDialog(BuildContext context, String err) {
+    Widget okButton = TextButton(
       child: Text("OK"),
       onPressed: () {
-        // Navigator.pop(context);
-        Get.offAll(() => CurveBar());
-      });
-  AlertDialog alert = AlertDialog(
-    title: Text("Success"),
-    content: Text("Data berhasil diinput"),
-    actions: [
-      okButton,
-    ],
-  );
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-}
+        Navigator.pop(context);
+        Get.offAll(() => PhotoPage(nikTXT.text));
+      },
+    );
+    AlertDialog alert = AlertDialog(
+      title: Text("Warning"),
+      content: Text(err),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  _showAlertDialoSuccess(BuildContext context, int err) {
+    Widget okButton = TextButton(
+        child: Text("OK"),
+        onPressed: () {
+          // Navigator.pop(context);
+          Get.offAll(() => PhotoPage(nikTXT.text));
+        });
+    AlertDialog alert = AlertDialog(
+      title: Text("Success"),
+      content: Text("Data berhasil diinput"),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 // ============================= Function Alert ====================
+}

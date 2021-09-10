@@ -12,7 +12,8 @@ import 'package:location/location.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
 import 'package:puskeu/model/new_nik.dart';
 import 'package:puskeu/model/save_token.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:puskeu/page/add_photo/photo_copy.dart';
+import 'package:puskeu/page/login_design/login_animation.dart';
 
 class PhotoPageAsli extends StatefulWidget {
   final NikBaru nikBaru;
@@ -36,30 +37,34 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
   PermissionStatus _permissionGranted;
   LocationData _locationData;
   List jenisPhoto = [];
+  List filteredJP = [];
+  List filteredJPNew = [];
+
   String _mySelection;
   bool isChecked = true;
+  String tampNIK = "";
   // ============================= Variabel ====================
 
   // ============================= Init ====================
   @override
   void initState() {
-    // nikTXT.text = widget.nikBaru.nik;
-    // this._getJenisPhoto(widget.nikBaru.nik);
     nikTXT.text = widget.nikBaru.nik;
-    this._getJenisPhoto(widget.nikBaru.nik);
+    _getJenisPhoto(widget.nikBaru.nik);
+    // fetchNik(widget.nikBaru.nik);
     super.initState();
   }
 
   reset() {
     setState(() {
       _selectedImage = null;
+      print("ini selectedImage : $_selectedImage");
     });
   }
   // ============================= Init ====================
 
   // ============================= Function ====================
 
-  Future<String> _getJenisPhoto(String nik) async {
+  Future<void> _getJenisPhoto(String nik) async {
     String url =
         'https://app.puskeu.polri.go.id:2216/umkm/mobile/jenis-foto/' + nik;
 
@@ -72,10 +77,13 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
       },
     );
     if (response.statusCode == 200) {
-      print(response.body);
+      var tampRes = response.body;
+      print("ini response body jenis foto : $tampRes");
       var responeBody = jsonDecode(response.body);
 
       setState(() {
+        var tampJenisFoto = jsonEncode(responeBody);
+        print("ini encode jenis foto : $tampJenisFoto");
         jenisPhoto = responeBody;
       });
 
@@ -131,8 +139,8 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
         sourcePath: image.path,
         aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
         compressQuality: 100,
-        maxHeight: 500,
-        maxWidth: 500,
+        maxHeight: 1920,
+        maxWidth: 1080,
         compressFormat: ImageCompressFormat.jpg,
         androidUiSettings: AndroidUiSettings(
             toolbarColor: Colors.deepOrange.shade900,
@@ -184,7 +192,9 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
         await http.Response.fromStream(await request.send());
     // print(response);
     if (response.statusCode == 200) {
-      // final data = json.decode(response.body);
+      setState(() {
+        tampNIK = nik;
+      });
       print(response.body);
       _showAlertDialoSuccess(context, response.statusCode);
       return "Berhasil";
@@ -200,9 +210,15 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
   // ============================= Body ====================
   @override
   Widget build(BuildContext context) {
-    print(_selectedImage?.lengthSync());
+    print("ini selected image length : ${_selectedImage?.lengthSync()}");
     return Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Get.offAll(() => CurveBar());
+            },
+          ),
           flexibleSpace: Container(
             decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -227,6 +243,9 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
                   print(_locationData.longitude);
                   print(_locationData.latitude);
                   print(_selectedImage.path);
+                  setState(() {
+                    tampNIK = nikTXT.text;
+                  });
                   addTreatment(
                       nikTXT.text,
                       _mySelection,
@@ -288,12 +307,12 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
                 value: _mySelection,
                 items: jenisPhoto.map((item) {
                   return DropdownMenuItem(
-                    enabled: item['NIK'] == "1" ? false : true,
+                    enabled: item['STSFOTO'] == "1" ? false : true,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(item['NAMAFOTO']),
-                        item["NIK"] == "1"
+                        item["STSFOTO"] == "1"
                             ? Icon(
                                 Icons.check_circle,
                                 color: Colors.green,
@@ -327,50 +346,49 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
   }
   // ============================= Body ====================
 
-}
-
 // ============================= Function Alert ====================
 
-_showAlertDialoSuccess(BuildContext context, int err) {
-  Widget okButton = TextButton(
-      child: Text("OK"),
-      onPressed: () {
-        // Navigator.pop(context);
-        Get.offAll(() => CurveBar());
-      });
-  AlertDialog alert = AlertDialog(
-    title: Text("Success"),
-    content: Text("Data berhasil diinput"),
-    actions: [
-      okButton,
-    ],
-  );
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-}
+  _showAlertDialoSuccess(BuildContext context, int err) {
+    Widget okButton = TextButton(
+        child: Text("OK"),
+        onPressed: () {
+          // Navigator.pop(context);
+          Get.offAll(() => PhotoPage(tampNIK));
+        });
+    AlertDialog alert = AlertDialog(
+      title: Text("Success"),
+      content: Text("Data berhasil diinput"),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 
-_showAlertFieldKosong(BuildContext context) {
-  Widget okButton = TextButton(
-      child: Text("OK"),
-      onPressed: () {
-        Navigator.pop(context);
-      });
-  AlertDialog alert = AlertDialog(
-    title: Text("Masalah"),
-    content: Text("Data harus diisi dulu"),
-    actions: [
-      okButton,
-    ],
-  );
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-}
+  _showAlertFieldKosong(BuildContext context) {
+    Widget okButton = TextButton(
+        child: Text("OK"),
+        onPressed: () {
+          Navigator.pop(context);
+        });
+    AlertDialog alert = AlertDialog(
+      title: Text("Masalah"),
+      content: Text("Data gagal uplaod"),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 // ============================= Function Alert ====================
+}

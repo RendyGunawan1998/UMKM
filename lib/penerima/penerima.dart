@@ -60,6 +60,29 @@ class _PenerimaPageState extends State<PenerimaPage> {
     }
   }
 
+  Future<String> cekNik(String nik) async {
+    String url =
+        "https://app.puskeu.polri.go.id:2216/umkm/mobile/cek_nik/?nik=" + nik;
+    print("ini url fungsi cek nik di pendataan : $url");
+    var response = await http.post(
+      Uri.parse(url),
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + await Token().getAccessToken(),
+      },
+    );
+    var debugBearer = await Token().getAccessToken();
+    print("ini debug fungsi cek nik $debugBearer");
+    print(response.body);
+    if (response.statusCode == 200) {
+      print(response.body);
+      return _showAlertTerdaftar(context);
+    } else {
+      return response.body;
+    }
+  }
+
   Future<Profile> getDataSatker() async {
     String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/profil/';
     print("ini url profile di pendataan : $url");
@@ -139,6 +162,11 @@ class _PenerimaPageState extends State<PenerimaPage> {
     final time = DateFormat("yyyy-MM-dd").format(timeNow);
     waktu = time;
     print("Ini waktu sekarang : $time");
+  }
+
+  reset() {
+    _nikTxt.clear();
+    _namaTxt.clear();
   }
 
   void getYears() {
@@ -287,7 +315,23 @@ class _PenerimaPageState extends State<PenerimaPage> {
           SizedBox(
             height: 4,
           ),
-          _getList("Alamat", "Masukkan alamat", _alamat),
+          TextFormField(
+            decoration: InputDecoration(
+              labelText: "Alamat",
+              hintText: "Masukkan alamat",
+              border:
+                  UnderlineInputBorder(borderRadius: BorderRadius.circular(5)),
+            ),
+            validator: validate,
+            controller: _alamat,
+            onSaved: (value) {
+              if (value == null || value.isEmpty || value == "") {
+                _alamat.text = "-";
+              } else
+                _alamat.text = value;
+            },
+          ),
+
           SizedBox(
             height: 7,
           ),
@@ -295,7 +339,23 @@ class _PenerimaPageState extends State<PenerimaPage> {
           SizedBox(
             height: 7,
           ),
-          _getList("Bidang Usaha", "Masukkan bidang usaha", _jenisUsaha),
+          TextFormField(
+            decoration: InputDecoration(
+              labelText: "Bidang Usaha",
+              hintText: "Masukkan bidang usaha",
+              border:
+                  UnderlineInputBorder(borderRadius: BorderRadius.circular(5)),
+            ),
+            validator: validate,
+            controller: _jenisUsaha,
+            onSaved: (value) {
+              if (value == null || value.isEmpty || value == "") {
+                _jenisUsaha.text = "-";
+              } else
+                _jenisUsaha.text = value;
+            },
+          ),
+
           SizedBox(
             height: 7,
           ),
@@ -307,68 +367,68 @@ class _PenerimaPageState extends State<PenerimaPage> {
           SizedBox(
             height: 7,
           ),
-          TextFormField(
-            readOnly: true,
-            decoration: InputDecoration(
-                hintText: "Klik Disini",
-                labelText: "Nama Petugas Pendata",
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20))),
-            keyboardType: TextInputType.number,
-            controller: _namaPetugas,
-            onSaved: (value) {
-              setState(() {
-                namaSatker = data.nama;
-                _namaPetugas.text = namaSatker;
-              });
-            },
-          ),
-          SizedBox(
-            height: 7,
-          ),
-          TextFormField(
-            readOnly: true,
-            decoration: InputDecoration(
-                labelText: "Nomor Anggota Petugas Pendata",
-                hintText: "Klik Disini",
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20))),
-            keyboardType: TextInputType.number,
-            controller: _noAnggota,
-            // validator: validate,
-            // onTap: () {
-            //   setState(() {
-            //     nrpSatker = data.nrp;
-            //     _noAnggota.text = nrpSatker;
-            //   });
-            // },
-            onSaved: (value) {
-              _noAnggota.text = value;
-            },
-          ),
-          SizedBox(
-            height: 7,
-          ),
-          TextFormField(
-            // onTap: () {
-            //   setState(() {
-            //     noHpPetugas = data.nomorhp;
-            //     _noHPPetugas.text = noHpPetugas;
-            //   });
-            // },
-            readOnly: true,
-            decoration: InputDecoration(
-                labelText: "No HP Petugas Pendata",
-                hintText: "Klik Disini",
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20))),
-            keyboardType: TextInputType.number,
-            controller: _noHPPetugas,
-            // validator: validate,
-            onSaved: (value) {
-              _noHPPetugas.text = value;
-            },
-          ),
+          // TextFormField(
+          //   readOnly: true,
+          //   decoration: InputDecoration(
+          //       hintText: "Klik Disini",
+          //       labelText: "Nama Petugas Pendata",
+          //       border: OutlineInputBorder(
+          //           borderRadius: BorderRadius.circular(20))),
+          //   keyboardType: TextInputType.number,
+          //   controller: _namaPetugas,
+          //   onSaved: (value) {
+          //     setState(() {
+          //       namaSatker = data.nama;
+          //       _namaPetugas.text = namaSatker;
+          //     });
+          //   },
+          // ),
+          // SizedBox(
+          //   height: 7,
+          // ),
+          // TextFormField(
+          //   readOnly: true,
+          //   decoration: InputDecoration(
+          //       labelText: "Nomor Anggota Petugas Pendata",
+          //       hintText: "Klik Disini",
+          //       border: OutlineInputBorder(
+          //           borderRadius: BorderRadius.circular(20))),
+          //   keyboardType: TextInputType.number,
+          //   controller: _noAnggota,
+          //   // validator: validate,
+          //   // onTap: () {
+          //   //   setState(() {
+          //   //     nrpSatker = data.nrp;
+          //   //     _noAnggota.text = nrpSatker;
+          //   //   });
+          //   // },
+          //   onSaved: (value) {
+          //     _noAnggota.text = value;
+          //   },
+          // ),
+          // SizedBox(
+          //   height: 7,
+          // ),
+          // TextFormField(
+          //   // onTap: () {
+          //   //   setState(() {
+          //   //     noHpPetugas = data.nomorhp;
+          //   //     _noHPPetugas.text = noHpPetugas;
+          //   //   });
+          //   // },
+          //   readOnly: true,
+          //   decoration: InputDecoration(
+          //       labelText: "No HP Petugas Pendata",
+          //       hintText: "Klik Disini",
+          //       border: OutlineInputBorder(
+          //           borderRadius: BorderRadius.circular(20))),
+          //   keyboardType: TextInputType.number,
+          //   controller: _noHPPetugas,
+          //   // validator: validate,
+          //   onSaved: (value) {
+          //     _noHPPetugas.text = value;
+          //   },
+          // ),
           SizedBox(
             height: 7,
           ),
@@ -390,8 +450,8 @@ class _PenerimaPageState extends State<PenerimaPage> {
                     print("Ini bulan : ${_bulanTxt.text}");
                     print("Ini tanggal : ${_tanggalTxt.text}");
 
-                    // tampJK = _jenisKelamin.text[0].toUpperCase();
-                    print("Ini jenis kelamin : ${_jenisKelamin.text}");
+                    tampJK = _jenisKelamin.text[0].toUpperCase();
+                    print("Ini jenis kelamin : $tampJK");
                     print("Ini alamat : ${_alamat.text}");
                     print("Ini nib : ${_nibTxt.text}");
                     print("Ini jenis usaha : ${_jenisUsaha.text}");
@@ -409,7 +469,7 @@ class _PenerimaPageState extends State<PenerimaPage> {
                       'nik': _nikTxt.text,
                       'nama': _namaTxt.text,
                       'tanggal_lahir': _ttlTxt.text,
-                      'jk': _jenisKelamin.text,
+                      'jk': tampJK,
                       'alamat': _alamat.text,
                       'nib': _nibTxt.text,
                       'jenis_usaha': _jenisUsaha.text,
@@ -486,6 +546,10 @@ class _PenerimaPageState extends State<PenerimaPage> {
 
   Widget _getNama() {
     return TextFormField(
+      onTap: () {
+        print("ini nik tamp : ${_nikTxt.text}");
+        cekNik(_nikTxt.text);
+      },
       decoration: InputDecoration(
         labelText: "Nama",
         hintText: "Masukkan Nama",
@@ -517,13 +581,6 @@ class _PenerimaPageState extends State<PenerimaPage> {
             isExpanded: true,
             value: currentDay,
             iconSize: 25,
-            // validator: (value) {
-            //   if (value == null || value.isEmpty || value == "") {
-            //     return "Tanggal kosong";
-            //   } else {
-            //     return null;
-            //   }
-            // },
             onChanged: (value) {
               setState(() {
                 if (value == null || value.isEmpty || value == "") {
@@ -743,46 +800,69 @@ class _PenerimaPageState extends State<PenerimaPage> {
       },
     );
   }
-}
 
-_showAlertDialog(BuildContext context) {
-  Widget okButton = TextButton(
-      child: Text("OK"),
-      onPressed: () {
-        Navigator.pop(context);
-      });
-  AlertDialog alert = AlertDialog(
-    title: Text("Gagal"),
-    content: Text("NIK sudah terdaftar"),
-    actions: [
-      okButton,
-    ],
-  );
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-}
+  _showAlertTerdaftar(BuildContext context) {
+    Widget okButton = TextButton(
+        child: Text("OK"),
+        onPressed: () {
+          reset();
+          Navigator.pop(context);
+          // Get.offAll(() => PenerimaPage());
+        });
+    AlertDialog alert = AlertDialog(
+      title: Text("Perhatian"),
+      content: Text("NIK sudah pernah terdaftar"),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 
-_showAlertDialogSuccess(BuildContext context) {
-  Widget okButton = TextButton(
-      child: Text("OK"),
-      onPressed: () {
-        Navigator.pop(context);
-      });
-  AlertDialog alert = AlertDialog(
-    title: Text("Sukses"),
-    content: Text("Data berhasil di upload"),
-    actions: [
-      okButton,
-    ],
-  );
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
+  _showAlertDialog(BuildContext context) {
+    Widget okButton = TextButton(
+        child: Text("OK"),
+        onPressed: () {
+          Navigator.pop(context);
+        });
+    AlertDialog alert = AlertDialog(
+      title: Text("Gagal"),
+      content: Text("NIK sudah terdaftar"),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  _showAlertDialogSuccess(BuildContext context) {
+    Widget okButton = TextButton(
+        child: Text("OK"),
+        onPressed: () {
+          Navigator.pop(context);
+        });
+    AlertDialog alert = AlertDialog(
+      title: Text("Sukses"),
+      content: Text("Data berhasil di upload"),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 }

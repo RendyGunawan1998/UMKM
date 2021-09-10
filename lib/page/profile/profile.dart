@@ -19,23 +19,31 @@ class _ProfilePageState extends State<ProfilePage>
   AnimationController _controller;
 
   Future<Profile> getProfile() async {
-    String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/profil/';
-    print("ini url profile di profile : $url");
+    try {
+      String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/profil/';
+      print("ini url profile di profile : $url");
 
-    var response = await http.get(
-      Uri.parse(url),
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + await Token().getAccessToken(),
-      },
-    );
-    //var toJson = jsonDecode(response.body);
-    if (response.statusCode == 200) {
-      print(response.body);
-      return Profile.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to load profile data');
+      var response = await http.get(
+        Uri.parse(url),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + await Token().getAccessToken(),
+        },
+      );
+      //var toJson = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        print(response.body);
+        return Profile.fromJson(jsonDecode(response.body));
+      } else {
+        await Token().removeToken();
+        return Get.offAll(() => LoginAnimation());
+        // throw Exception('Failed to load profile data');
+      }
+    } catch (e) {
+      print(e);
+      await Token().removeToken();
+      return Get.offAll(() => LoginAnimation());
     }
   }
 
