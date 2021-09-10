@@ -69,11 +69,7 @@ class _LoginAnimationState extends State<LoginAnimation>
   String validatePassword(value) {
     if (value.isEmpty) {
       return "Password can't be empty";
-    }
-    // else if (value.length <= 7) {
-    //   return "Password to short, please make 7 character";
-    // }
-    else {
+    } else {
       return null;
     }
   }

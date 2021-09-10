@@ -11,7 +11,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
 import 'package:puskeu/model/save_token.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
 
 class PhotoPenerima extends StatefulWidget {
   final String nikBaru;
@@ -26,6 +25,8 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
   bool _inProgress = false;
   final selectedIndexes = [];
 
+  String nikTamp = "";
+
   var nikTXT = TextEditingController();
   var jenis = TextEditingController();
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -35,19 +36,16 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
   PermissionStatus _permissionGranted;
   LocationData _locationData;
   List jenisPhoto = [];
-  List filteredJP = [];
+
   String _mySelection;
   // ============================= Variabel ====================
 
   // ============================= Init ====================
   @override
   void initState() {
-    // nikTXT.text = widget.nikBaru.nik;
-    // this._getJenisPhoto(widget.nikBaru.nik);
     nikTXT.text = widget.nikBaru;
     print("ini nik di fungsi foto penerima : ${nikTXT.text}");
     getJenisPhoto(widget.nikBaru);
-
     super.initState();
   }
 
@@ -91,10 +89,6 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
 
       setState(() {
         jenisPhoto = responeBody;
-        filteredJP = jenisPhoto
-            .where((data) => data["NAMAFOTO"] == "BUKTI CALON PENERIMA")
-            .toList();
-        print("ini filter jp : $filteredJP");
       });
 
       return "Get Jenis Foto Success";
@@ -149,8 +143,8 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
         sourcePath: image.path,
         aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
         compressQuality: 100,
-        maxHeight: 500,
-        maxWidth: 500,
+        maxHeight: 1920,
+        maxWidth: 1080,
         compressFormat: ImageCompressFormat.jpg,
         androidUiSettings: AndroidUiSettings(
             toolbarColor: Colors.deepOrange.shade900,
@@ -215,8 +209,10 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
     print("ini response : $response");
     print("ini response body : ${response.body}");
     if (response.statusCode == 200) {
-      // final data = json.decode(response.body);
       print(response.body);
+      setState(() {
+        nikTamp = nik;
+      });
       _showAlertDialoSuccess(context, response.statusCode);
       return "Berhasil";
     } else {
@@ -234,6 +230,12 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
     print(_selectedImage?.lengthSync());
     return Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Get.offAll(() => CurveBar());
+            },
+          ),
           flexibleSpace: Container(
             decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -258,6 +260,9 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
                   print(_locationData.longitude);
                   print(_locationData.latitude);
                   print(_selectedImage.path);
+                  setState(() {
+                    nikTamp = nikTXT.text;
+                  });
                   addTreatment(
                       nikTXT.text,
                       _mySelection,
@@ -315,6 +320,7 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
                 controller: nikTXT,
                 onSaved: (value) {
                   nikTXT.text = value;
+                  nikTamp = nikTXT.text;
                 },
               ),
               DropdownButton(
@@ -322,17 +328,14 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
                 isExpanded: true,
                 hint: Text('Jenis Foto'),
                 value: _mySelection,
-                items: filteredJP.map((item) {
+                items: jenisPhoto.map((item) {
                   return DropdownMenuItem(
-                      enabled: item['NIK'] == "1" ? false : true,
+                      enabled: item['STSFOTO'] == "1" ? false : true,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(item['NAMAFOTO']),
-                          // item['NAMAFOTO'] == "BUKTI CALON PENERIMA"
-                          //     ?
-                          //     : Container(),
-                          item["NIK"] == "1"
+                          item["STSFOTO"] == "1"
                               ? Icon(
                                   Icons.check_circle,
                                   color: Colors.green,
@@ -366,50 +369,53 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
   }
   // ============================= Body ====================
 
+  _showAlertDialoSuccess(BuildContext context, int err) {
+    Widget okButton = TextButton(
+        child: Text("OK"),
+        onPressed: () {
+          // Navigator.pop(context);
+          Get.offAll(() => PhotoPenerima(
+                nikBaru: nikTamp,
+              ));
+        });
+    AlertDialog alert = AlertDialog(
+      title: Text("Success"),
+      content: Text("Data berhasil diinput"),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  _showAlertFieldKosong(BuildContext context) {
+    Widget okButton = TextButton(
+        child: Text("OK"),
+        onPressed: () {
+          Navigator.pop(context);
+        });
+    AlertDialog alert = AlertDialog(
+      title: Text("Masalah"),
+      content: Text("Data gagal di upload"),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+// ============================= Function Alert ====================
+
 }
 
 // ============================= Function Alert ====================
 
-_showAlertDialoSuccess(BuildContext context, int err) {
-  Widget okButton = TextButton(
-      child: Text("OK"),
-      onPressed: () {
-        // Navigator.pop(context);
-        Get.offAll(() => CurveBar());
-      });
-  AlertDialog alert = AlertDialog(
-    title: Text("Success"),
-    content: Text("Data berhasil diinput"),
-    actions: [
-      okButton,
-    ],
-  );
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-}
-
-_showAlertFieldKosong(BuildContext context) {
-  Widget okButton = TextButton(
-      child: Text("OK"),
-      onPressed: () {
-        Navigator.pop(context);
-      });
-  AlertDialog alert = AlertDialog(
-    title: Text("Masalah"),
-    content: Text("Data gagal di upload"),
-    actions: [
-      okButton,
-    ],
-  );
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return alert;
-    },
-  );
-}
-// ============================= Function Alert ====================

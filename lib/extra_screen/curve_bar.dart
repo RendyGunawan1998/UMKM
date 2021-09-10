@@ -10,7 +10,7 @@ class CurveBar extends StatefulWidget {
 }
 
 class _CurveBarState extends State<CurveBar> {
-  int _pageIndex = 1;
+  int _pageIndex = 0;
 
   final SearchPage _search = SearchPage();
   final ScanPage _scan = ScanPage();
@@ -18,7 +18,7 @@ class _CurveBarState extends State<CurveBar> {
 
   final ProfilePage _profile = ProfilePage();
 
-  Widget _tampilPageIndex = new ScanPage();
+  Widget _tampilPageIndex = new SearchPage();
 
   Widget _choosenPage(int page) {
     switch (page) {

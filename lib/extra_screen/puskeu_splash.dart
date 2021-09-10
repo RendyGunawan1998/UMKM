@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 // import 'package:puskeu/main.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
-import 'package:puskeu/main.dart';
 import 'package:puskeu/page/login_design/login_animation.dart';
 
 import '../model/save_token.dart';
@@ -42,7 +41,7 @@ class _PuskeuSplashState extends State<PuskeuSplash> {
   void cekToken() async {
     try {
       var token = await Token().getAccessToken();
-      if (token.endsWith(null)) {
+      if (token != null) {
         Get.offAll(() => CurveBar());
       } else {
         LoginAnimation();

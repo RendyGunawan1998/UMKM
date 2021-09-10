@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:puskeu/model/new_nik.dart';
 import 'package:puskeu/model/save_token.dart';
 import 'package:puskeu/page/add_photo/photo_asli.dart';
+import 'package:puskeu/page/login_design/login_animation.dart';
 
 class SearchPage extends StatefulWidget {
   @override
@@ -25,31 +26,39 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<List<NikBaru>> fetchNik(String cariNIK) async {
-    var response = await http.get(
-      // Uri.parse(
-      //     "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/2125"),
-      Uri.parse(
-          "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/?nik=" +
-              cariNIK),
+    try {
+      var response = await http.get(
+        // Uri.parse(
+        //     "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/2125"),
+        Uri.parse(
+            "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/?nik=" +
+                cariNIK),
 
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + await Token().getAccessToken(),
-      },
-    );
-    print(Token().getAccessToken());
-    print(response);
-    if (response.statusCode == 200) {
-      // return Nik.fromJson(json.decode(response.body));
-      print(response.body);
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + await Token().getAccessToken(),
+        },
+      );
+      print(Token().getAccessToken());
+      print(response);
+      if (response.statusCode == 200) {
+        // return Nik.fromJson(json.decode(response.body));
+        print(response.body);
 
-      final res = json.decode(response.body);
-      final data = res['data'];
-      return (data as List).map((data) => NikBaru.fromJson(data)).toList();
-    } else {
-      print(response.body);
-      throw Exception('Failed to load data');
+        final res = json.decode(response.body);
+        final data = res['data'];
+        return (data as List).map((data) => NikBaru.fromJson(data)).toList();
+      } else {
+        print(response.body);
+        await Token().removeToken();
+        return Get.offAll(() => LoginAnimation());
+        // throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      print(e);
+      await Token().removeToken();
+      return Get.offAll(() => LoginAnimation());
     }
   }
 
