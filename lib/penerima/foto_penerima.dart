@@ -6,8 +6,8 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:images_picker/images_picker.dart';
 import 'package:location/location.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
 import 'package:puskeu/model/save_token.dart';
@@ -45,7 +45,7 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
   void initState() {
     nikTXT.text = widget.nikBaru;
     print("ini nik di fungsi foto penerima : ${nikTXT.text}");
-    getJenisPhoto(widget.nikBaru);
+    _getJenisPhoto(widget.nikBaru);
     super.initState();
   }
 
@@ -77,8 +77,6 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        // HttpHeaders.authorizationHeader:
-        //     "Bearer " + await Token().getAccessToken(),
         "Authorization": "Bearer " + await Token().getAccessToken(),
       },
     );
@@ -88,6 +86,8 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
       var responeBody = jsonDecode(response.body);
 
       setState(() {
+        var tampJenisFoto = jsonEncode(responeBody);
+        print("ini encode jenis foto : $tampJenisFoto");
         jenisPhoto = responeBody;
       });
 
@@ -110,9 +110,6 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
       if (_permissionGranted != PermissionStatus.granted) return;
     }
     _locationData = await location.getLocation();
-    // setState(() {
-    //   _isGetLocation = true;
-    // });
   }
 
   Widget getImageWidget() {
@@ -137,28 +134,41 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
     setState(() {
       _inProgress = true;
     });
-    File image = await ImagePicker.pickImage(source: source);
+    List<Media> image = await ImagesPicker.openCamera(
+      maxTime: 1,
+      quality: 0.8,
+      maxSize: 4000,
+      pickType: PickType.image,
+    );
     if (image != null) {
-      File cropped = await ImageCropper.cropImage(
-        sourcePath: image.path,
-        aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-        compressQuality: 100,
-        maxHeight: 1920,
-        maxWidth: 1080,
-        compressFormat: ImageCompressFormat.jpg,
-        androidUiSettings: AndroidUiSettings(
-            toolbarColor: Colors.deepOrange.shade900,
-            statusBarColor: Colors.deepOrange.shade900,
-            backgroundColor: Colors.white,
-            // hideBottomControls: true,
-            toolbarTitle: "Cropper"),
-      );
-      this.setState(() {
-        _selectedImage = cropped;
-        _inProgress = false;
+      setState(() {
+        _selectedImage = File(image[0].path);
       });
-      _selectedImage.path;
-    } else {
+    }
+
+    // File image = await ImagePicker.pickImage(source: source);
+    // if (image != null) {
+    //   File cropped = await ImageCropper.cropImage(
+    //     sourcePath: image.path,
+    //     aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
+    //     compressQuality: 100,
+    //     maxHeight: 1920,
+    //     maxWidth: 1080,
+    //     compressFormat: ImageCompressFormat.jpg,
+    //     androidUiSettings: AndroidUiSettings(
+    //         toolbarColor: Colors.deepOrange.shade900,
+    //         statusBarColor: Colors.deepOrange.shade900,
+    //         backgroundColor: Colors.white,
+    //         // hideBottomControls: true,
+    //         toolbarTitle: "Cropper"),
+    //   );
+    //   setState(() {
+    //     _selectedImage = cropped;
+    //     _inProgress = false;
+    //   });
+    //   _selectedImage.path;
+    // }
+    else {
       setState(() {
         _inProgress = false;
       });
@@ -210,9 +220,7 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
     print("ini response body : ${response.body}");
     if (response.statusCode == 200) {
       print(response.body);
-      setState(() {
-        nikTamp = nik;
-      });
+      nikTamp = nik;
       _showAlertDialoSuccess(context, response.statusCode);
       return "Berhasil";
     } else {
@@ -260,9 +268,8 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
                   print(_locationData.longitude);
                   print(_locationData.latitude);
                   print(_selectedImage.path);
-                  setState(() {
-                    nikTamp = nikTXT.text;
-                  });
+                  nikTamp = nikTXT.text;
+
                   addTreatment(
                       nikTXT.text,
                       _mySelection,
@@ -330,26 +337,26 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
                 value: _mySelection,
                 items: jenisPhoto.map((item) {
                   return DropdownMenuItem(
-                      enabled: item['STSFOTO'] == "1" ? false : true,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(item['NAMAFOTO']),
-                          item["STSFOTO"] == "1"
-                              ? Icon(
-                                  Icons.check_circle,
-                                  color: Colors.green,
-                                )
-                              : Container(),
-                        ],
-                      ),
-                      value: item['KODEFOTO'].toString());
+                    enabled: item['STSFOTO'] == "1" ? false : true,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(item['NAMAFOTO']),
+                        item["STSFOTO"] == "1"
+                            ? Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              )
+                            : Container(),
+                      ],
+                    ),
+                    value: item['KODEFOTO'].toString(),
+                  );
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
                     _mySelection = value;
                     print(_mySelection);
-                    print("ini value jenis foto $value");
                   });
                 },
               ),
@@ -418,4 +425,3 @@ class _PhotoPenerimaState extends State<PhotoPenerima> {
 }
 
 // ============================= Function Alert ====================
-

@@ -15,32 +15,74 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   Future<List<NikBaru>> futureNik;
-
+  Future<String> futureProfile;
   TextEditingController _searchTxt = TextEditingController();
   String searchString = "";
+  String tampKDSATKER = "";
+
+  @override
+  void setState(fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
+  }
 
   @override
   void initState() {
-    futureNik = fetchNik("");
+    futureProfile = getProfile();
+
+    print("disini kdsatker di init :$tampKDSATKER");
+    futureNik = fetchNik("", "");
     super.initState();
   }
 
-  Future<List<NikBaru>> fetchNik(String cariNIK) async {
-    try {
-      var response = await http.get(
-        // Uri.parse(
-        //     "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/2125"),
-        Uri.parse(
-            "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/?nik=" +
-                cariNIK),
+  Future<String> getProfile() async {
+    String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/profil/';
+    print("ini url profile di profile : $url");
 
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + await Token().getAccessToken(),
+      },
+    );
+    //var toJson = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      print(response.body);
+      var tamp = json.decode(response.body);
+
+      setState(() {
+        tampKDSATKER = tamp["KDSATKER"];
+        print("ini kd sakter di getProfile $tampKDSATKER");
+        futureNik = fetchNik("", tampKDSATKER);
+        return tampKDSATKER;
+      });
+      return tampKDSATKER;
+      // return Profile.fromJson(jsonDecode(response.body));
+    } else {
+      await Token().removeToken();
+      return Get.offAll(() => LoginAnimation());
+      // throw Exception('Failed to load profile data');
+    }
+  }
+
+  Future<List<NikBaru>> fetchNik(String cariNIK, String satker) async {
+    satker = tampKDSATKER;
+    print("ini sakter di fetch nik : $satker");
+    try {
+      var url =
+          "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/?nik=$cariNIK&kdsatker=$satker";
+      print("ini url fetch nik : $url");
+      var response = await http.get(
+        Uri.parse(url),
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
           "Authorization": "Bearer " + await Token().getAccessToken(),
         },
       );
-      print(Token().getAccessToken());
       print(response);
       if (response.statusCode == 200) {
         // return Nik.fromJson(json.decode(response.body));
@@ -117,9 +159,7 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
               suffixIcon: IconButton(
-                onPressed: () {
-                  // futureNik = fetchNik(searchString);
-                },
+                onPressed: () {},
                 icon: Icon(Icons.search),
               ),
               labelText: "NIK",
@@ -129,7 +169,7 @@ class _SearchPageState extends State<SearchPage> {
               value = value.toLowerCase();
               setState(() {
                 searchString = value;
-                futureNik = fetchNik(searchString);
+                futureNik = fetchNik(searchString, tampKDSATKER);
                 print(searchString);
               });
             },
@@ -180,6 +220,26 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ],
       ),
+    );
+  }
+
+  showAlertDialog(BuildContext context) {
+    Widget okButton =
+        TextButton(child: Text("OK"), onPressed: () => Navigator.pop(context));
+    AlertDialog alert = AlertDialog(
+      title: Text("Masalah"),
+      content: Text("KDSATKER tidak ditemukan"),
+      // Text(
+      //     "Data tidak cocok \nData tidak sesuai dengan yang ada di database"),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
     );
   }
 }

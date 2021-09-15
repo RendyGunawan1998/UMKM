@@ -6,8 +6,8 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:images_picker/images_picker.dart';
 import 'package:location/location.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
 import 'package:puskeu/model/new_nik.dart';
@@ -135,9 +135,6 @@ class _PhotoPageState extends State<PhotoPage> {
       if (_permissionGranted != PermissionStatus.granted) return;
     }
     _locationData = await location.getLocation();
-    // setState(() {
-    //   _isGetLocation = true;
-    // });
   }
 
   Widget getImageWidget() {
@@ -162,28 +159,40 @@ class _PhotoPageState extends State<PhotoPage> {
     setState(() {
       _inProgress = true;
     });
-    File image = await ImagePicker.pickImage(source: source);
+    List<Media> image = await ImagesPicker.openCamera(
+      maxTime: 1,
+      quality: 0.8,
+      maxSize: 4000,
+      pickType: PickType.image,
+    );
     if (image != null) {
-      File cropped = await ImageCropper.cropImage(
-        sourcePath: image.path,
-        aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-        compressQuality: 100,
-        maxHeight: 1920,
-        maxWidth: 1080,
-        compressFormat: ImageCompressFormat.jpg,
-        androidUiSettings: AndroidUiSettings(
-            toolbarColor: Colors.deepOrange.shade900,
-            statusBarColor: Colors.deepOrange.shade900,
-            backgroundColor: Colors.white,
-            // hideBottomControls: true,
-            toolbarTitle: "Cropper"),
-      );
-      this.setState(() {
-        _selectedImage = cropped;
-        _inProgress = false;
+      setState(() {
+        _selectedImage = File(image[0].path);
       });
-      _selectedImage.path;
-    } else {
+    }
+    // File image = await ImagePicker.pickImage(source: source);
+    // if (image != null) {
+    //   File cropped = await ImageCropper.cropImage(
+    //     sourcePath: image.path,
+    //     aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
+    //     compressQuality: 100,
+    //     maxHeight: 1920,
+    //     maxWidth: 1080,
+    //     compressFormat: ImageCompressFormat.jpg,
+    //     androidUiSettings: AndroidUiSettings(
+    //         toolbarColor: Colors.deepOrange.shade900,
+    //         statusBarColor: Colors.deepOrange.shade900,
+    //         backgroundColor: Colors.white,
+    //         // hideBottomControls: true,
+    //         toolbarTitle: "Cropper"),
+    //   );
+    //   this.setState(() {
+    //     _selectedImage = cropped;
+    //     _inProgress = false;
+    //   });
+    //   _selectedImage.path;
+    // }
+    else {
       setState(() {
         _inProgress = false;
       });

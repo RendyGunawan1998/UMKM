@@ -6,14 +6,13 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
-import 'package:image_cropper/image_cropper.dart';
+import "package:images_picker/images_picker.dart";
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
 import 'package:puskeu/model/new_nik.dart';
 import 'package:puskeu/model/save_token.dart';
 import 'package:puskeu/page/add_photo/photo_copy.dart';
-import 'package:puskeu/page/login_design/login_animation.dart';
 
 class PhotoPageAsli extends StatefulWidget {
   final NikBaru nikBaru;
@@ -52,6 +51,11 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
     _getJenisPhoto(widget.nikBaru.nik);
     // fetchNik(widget.nikBaru.nik);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   reset() {
@@ -133,28 +137,41 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
     setState(() {
       _inProgress = true;
     });
-    File image = await ImagePicker.pickImage(source: source);
+    List<Media> image = await ImagesPicker.openCamera(
+      maxTime: 1,
+      quality: 0.8,
+      maxSize: 4000,
+      pickType: PickType.image,
+    );
     if (image != null) {
-      File cropped = await ImageCropper.cropImage(
-        sourcePath: image.path,
-        aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-        compressQuality: 100,
-        maxHeight: 1920,
-        maxWidth: 1080,
-        compressFormat: ImageCompressFormat.jpg,
-        androidUiSettings: AndroidUiSettings(
-            toolbarColor: Colors.deepOrange.shade900,
-            statusBarColor: Colors.deepOrange.shade900,
-            backgroundColor: Colors.white,
-            // hideBottomControls: true,
-            toolbarTitle: "Cropper"),
-      );
-      this.setState(() {
-        _selectedImage = cropped;
-        _inProgress = false;
+      setState(() {
+        _selectedImage = File(image[0].path);
       });
-      _selectedImage.path;
-    } else {
+    }
+
+    // File image = await ImagePicker.pickImage(source: source);
+    // if (image != null) {
+    //   File cropped = await ImageCropper.cropImage(
+    //     sourcePath: image.path,
+    //     // aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
+    //     compressQuality: 100,
+    //     maxHeight: 1920,
+    //     maxWidth: 1080,
+    //     compressFormat: ImageCompressFormat.jpg,
+    //     androidUiSettings: AndroidUiSettings(
+    //         toolbarColor: Colors.deepOrange.shade900,
+    //         statusBarColor: Colors.deepOrange.shade900,
+    //         backgroundColor: Colors.white,
+    //         // hideBottomControls: true,
+    //         toolbarTitle: "Cropper"),
+    //   );
+    //   setState(() {
+    //     _selectedImage = cropped;
+    //     _inProgress = false;
+    //     _selectedImage.path;
+    //   });
+    // }
+    else {
       setState(() {
         _inProgress = false;
       });
@@ -237,7 +254,7 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
         bottomNavigationBar: _mySelection != null && _selectedImage != null
             ? MaterialButton(
                 color: Colors.blue[200],
-                onPressed: () {
+                onPressed: () async {
                   print(nikTXT.text);
                   print(_mySelection);
                   print(_locationData.longitude);
@@ -246,12 +263,15 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
                   setState(() {
                     tampNIK = nikTXT.text;
                   });
-                  addTreatment(
+                  await addTreatment(
                       nikTXT.text,
                       _mySelection,
                       _locationData.latitude,
                       _locationData.longitude,
                       _selectedImage.path);
+                  setState(() {
+                    _selectedImage = null;
+                  });
                 },
                 child: Text("Upload"),
               )
