@@ -19,9 +19,6 @@ class _PenerimaPageState extends State<PenerimaPage> {
 
   TextEditingController _namaTxt = TextEditingController();
   TextEditingController _nikTxt = TextEditingController();
-  TextEditingController _tahunTxt = TextEditingController();
-  TextEditingController _bulanTxt = TextEditingController();
-  TextEditingController _tanggalTxt = TextEditingController();
   TextEditingController _ttlTxt = TextEditingController();
   TextEditingController _jenisKelamin = TextEditingController();
   TextEditingController _nibTxt = TextEditingController();
@@ -32,6 +29,7 @@ class _PenerimaPageState extends State<PenerimaPage> {
   TextEditingController _namaPetugas = TextEditingController();
   TextEditingController _noAnggota = TextEditingController();
   TextEditingController _noHPPetugas = TextEditingController();
+  TextEditingController _job = TextEditingController();
   final formkey = new GlobalKey<FormState>();
 
   bool statusButton = false;
@@ -60,29 +58,6 @@ class _PenerimaPageState extends State<PenerimaPage> {
       return null;
     }
   }
-
-  // Future<String> cekNik(String nik) async {
-  //   String url =
-  //       "https://app.puskeu.polri.go.id:2216/umkm/mobile/cek_nik/?nik=" + nik;
-  //   print("ini url fungsi cek nik di pendataan : $url");
-  //   var response = await http.post(
-  //     Uri.parse(url),
-  //     headers: {
-  //       "Accept": "application/json",
-  //       "Content-Type": "application/json",
-  //       "Authorization": "Bearer " + await Token().getAccessToken(),
-  //     },
-  //   );
-  //   var debugBearer = await Token().getAccessToken();
-  //   print("ini debug fungsi cek nik $debugBearer");
-  //   print(response.body);
-  //   if (response.statusCode == 200) {
-  //     print(response.body);
-  //     return _showAlertTerdaftar(context);
-  //   } else {
-  //     return response.body;
-  //   }
-  // }
 
   Future<Profile> getDataSatker() async {
     String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/profil/';
@@ -256,7 +231,6 @@ class _PenerimaPageState extends State<PenerimaPage> {
       key: formkey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        // mainAxisAlignment: MainAxisAlignment.start,
         children: [
           TextFormField(
             onTap: () {
@@ -328,6 +302,10 @@ class _PenerimaPageState extends State<PenerimaPage> {
           SizedBox(
             height: 4,
           ),
+          _getList("Pekerjaan", "Masukkan Pekerjaan", _job),
+          SizedBox(
+            height: 7,
+          ),
           TextFormField(
             decoration: InputDecoration(
               labelText: "Alamat",
@@ -386,27 +364,12 @@ class _PenerimaPageState extends State<PenerimaPage> {
                 onPressed: () async {
                   if (formkey.currentState.validate()) {
                     formkey.currentState.save();
-                    print("Ini Nik : $_nikTxt");
-                    print("Ini nama : $_namaTxt");
-
-                    print("Ini ttl : $_ttlTxt");
-                    print("Ini tahun : $_tahunTxt");
-                    print("Ini bulan : $_bulanTxt");
-                    print("Ini tanggal : $_tanggalTxt");
-
                     tampJK = _jenisKelamin.text[0].toUpperCase();
-                    print("Ini jenis kelamin : $tampJK");
-                    print("Ini alamat : $_alamat");
-                    print("Ini nib : $_nibTxt");
-                    print("Ini jenis usaha : $_jenisUsaha");
-                    print("Ini alamat usaha : $_alamatUsaha");
-                    print("Ini no telp : $_noHP");
-                    print("Ini nama sakter : $_namaPetugas");
-                    print("Ini no sakter : $_noAnggota");
-                    print("Ini hp sakter : $_noHPPetugas");
+
                     now();
                     print("Ini tanggal masuk : $waktu");
                     print("Ini tampungan nik : $nikTamp");
+                    print("Ini tampungan pekerjaan : $_job");
 
                     print("validasi sukses");
                     var _body = {
@@ -423,6 +386,7 @@ class _PenerimaPageState extends State<PenerimaPage> {
                       'nomor_anggota': _noAnggota.text,
                       'nomor_hape_petugas': _noHPPetugas.text,
                       'tanggal_masuk': waktu,
+                      'pekerjaan': _job.text,
                     };
                     print("Ini Body " + json.encode(_body));
                     try {
@@ -439,9 +403,6 @@ class _PenerimaPageState extends State<PenerimaPage> {
                       );
                       print(response.body);
                       if (response.statusCode == 200) {
-                        // SharedPreferences prefs = await SharedPreferences.getInstance();
-                        // prefs.setBool("isLoggedIn", true);
-                        // Token().saveToken(response.body);
                         print('Token : ' + response.body);
                         print("UPLOAD SUKSES");
                         setState(() {
@@ -453,7 +414,6 @@ class _PenerimaPageState extends State<PenerimaPage> {
                         print(response.body);
                         _showAlertDialogSuccess(context);
                         return response.body;
-                        // Get.offAll(() => LoadingScreen());
                       } else {
                         _showAlertDialog(context);
                       }
@@ -486,148 +446,10 @@ class _PenerimaPageState extends State<PenerimaPage> {
           return null;
         }
       },
-      // RequiredValidator(errorText: 'Nama tidak boleh kosong'),
       controller: _namaTxt,
       onSaved: (value) {
         _namaTxt.text = value;
       },
-    );
-  }
-
-  Widget _getTTL() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          flex: 3,
-          child: DropdownButtonFormField(
-            hint: Text("Tanggal"),
-            isExpanded: true,
-            value: currentDay,
-            iconSize: 25,
-            onChanged: (value) {
-              setState(() {
-                if (value == null || value.isEmpty || value == "") {
-                  _tanggalTxt.text = "01";
-                } else
-                  currentDay = value;
-                _tanggalTxt.text = currentDay;
-                print(_tanggalTxt.text);
-              });
-            },
-            onSaved: (value) {
-              setState(() {
-                if (value == null || value.isEmpty || value == "") {
-                  _tanggalTxt.text = "01";
-                } else
-                  currentDay = value;
-                _tanggalTxt.text = currentDay;
-                print(_tanggalTxt.text);
-              });
-            },
-            items: tanggal.map(
-              (item) {
-                return DropdownMenuItem(
-                  value: item,
-                  child: new Text(item),
-                );
-              },
-            ).toList(),
-          ),
-        ),
-        Text(
-          "-",
-          style: TextStyle(color: Colors.black, fontSize: 40),
-        ),
-        Expanded(
-          flex: 3,
-          child: DropdownButtonFormField(
-            dropdownColor: Colors.white,
-            isExpanded: true,
-            hint: Text('Bulan'),
-            value: currentBulan,
-            // validator: (value) {
-            //   if (value == null || value.isEmpty || value == "") {
-            //     return "Bulan kosong";
-            //   } else {
-            //     return null;
-            //   }
-            // },
-            items: dataBulan.map((item) {
-              return DropdownMenuItem(
-                child: Text(item['display']),
-                value: item['value'],
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                if (value == null || value.isEmpty || value == "") {
-                  _bulanTxt.text = "01";
-                } else
-                  currentBulan = value;
-                _bulanTxt.text = currentBulan;
-                print("ini kondisi jika kosong : ${_bulanTxt.text}");
-              });
-            },
-            onSaved: (value) {
-              setState(() {
-                if (value == null || value.isEmpty || value == "") {
-                  _bulanTxt.text = "01";
-                } else
-                  currentBulan = value;
-                _bulanTxt.text = currentBulan;
-                print("ini kondisi jika kosong : ${_bulanTxt.text}");
-              });
-            },
-          ),
-        ),
-        Text(
-          "-",
-          style: TextStyle(color: Colors.black, fontSize: 40),
-        ),
-        Expanded(
-          flex: 3,
-          child: DropdownButtonFormField(
-            dropdownColor: Colors.white,
-            isExpanded: true,
-            hint: Text('Tahun'),
-            value: currentTahun,
-            // validator: (value) {
-            //   if (value == null || value.isEmpty || value == "") {
-            //     return "Tahun kosong";
-            //   } else {
-            //     return null;
-            //   }
-            // },
-            items: years.map((item) {
-              return DropdownMenuItem(
-                child: Text(item['display']),
-                value: item['value'],
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                if (value == null || value.isEmpty || value == "") {
-                  _tahunTxt.text = "2021";
-                } else
-                  currentTahun = value;
-                _tahunTxt.text = currentTahun;
-                print("ini kondisi jika kosong : ${_bulanTxt.text}");
-              });
-            },
-            onSaved: (value) {
-              setState(() {
-                if (value == null || value.isEmpty || value == "") {
-                  _tahunTxt.text = "2021";
-                } else
-                  currentTahun = value;
-                _tahunTxt.text = currentTahun;
-                print("ini kondisi jika kosong : ${_bulanTxt.text}");
-              });
-            },
-          ),
-        ),
-      ],
     );
   }
 
@@ -721,29 +543,6 @@ class _PenerimaPageState extends State<PenerimaPage> {
           _noHP.text = "-";
         } else
           _noHP.text = value;
-      },
-    );
-  }
-
-  _showAlertTerdaftar(BuildContext context) {
-    Widget okButton = TextButton(
-        child: Text("OK"),
-        onPressed: () {
-          reset();
-          Navigator.pop(context);
-          // Get.offAll(() => PenerimaPage());
-        });
-    AlertDialog alert = AlertDialog(
-      title: Text("Perhatian"),
-      content: Text("NIK sudah pernah terdaftar"),
-      actions: [
-        okButton,
-      ],
-    );
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
       },
     );
   }

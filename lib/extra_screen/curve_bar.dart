@@ -13,7 +13,7 @@ class _CurveBarState extends State<CurveBar> {
   int _pageIndex = 0;
 
   final SearchPage _search = SearchPage();
-  // final ScanPage _scan = ScanPage();
+  final ScanPage _scan = ScanPage();
   final PenerimaPage _penerima = PenerimaPage();
 
   final ProfilePage _profile = ProfilePage();
@@ -25,13 +25,13 @@ class _CurveBarState extends State<CurveBar> {
       case 0:
         return _search;
         break;
-      // case 1:
-      //   return _scan;
-      //   break;
       case 1:
-        return _penerima;
+        return _scan;
         break;
       case 2:
+        return _penerima;
+        break;
+      case 3:
         return _profile;
         break;
       default:
@@ -57,10 +57,10 @@ class _CurveBarState extends State<CurveBar> {
             Icons.search,
             color: Colors.black,
           ),
-          // Icon(
-          //   Icons.camera,
-          //   color: Colors.black,
-          // ),
+          Icon(
+            Icons.camera,
+            color: Colors.black,
+          ),
           Icon(
             Icons.person_add,
             color: Colors.black,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:puskeu/model/new_nik.dart';
+import 'package:puskeu/model/nikv2.dart';
 import 'package:puskeu/model/save_token.dart';
 import 'package:puskeu/page/add_photo/photo_asli.dart';
 import 'package:puskeu/page/login_design/login_animation.dart';
@@ -15,10 +16,12 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   Future<List<NikBaru>> futureNik;
+  // Future<List<Nikv2>> futureNik;
   Future<String> futureProfile;
   TextEditingController _searchTxt = TextEditingController();
   String searchString = "";
   String tampKDSATKER = "";
+  bool statusCari = false;
 
   @override
   void setState(fn) {
@@ -30,15 +33,24 @@ class _SearchPageState extends State<SearchPage> {
   @override
   void initState() {
     futureProfile = getProfile();
-
-    print("disini kdsatker di init :$tampKDSATKER");
+    // clearTamp();
+    // print("disini kdsatker di init :$tampKDSATKER");
     futureNik = fetchNik("", "");
     super.initState();
   }
 
+  clearTamp() {
+    setState(() {
+      if (statusCari = true) {
+        searchString = null;
+      } else
+        return null;
+    });
+  }
+
   Future<String> getProfile() async {
     String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/profil/';
-    print("ini url profile di profile : $url");
+    // print("ini url profile di profile : $url");
 
     var response = await http.get(
       Uri.parse(url),
@@ -50,12 +62,12 @@ class _SearchPageState extends State<SearchPage> {
     );
     //var toJson = jsonDecode(response.body);
     if (response.statusCode == 200) {
-      print(response.body);
+      // print(response.body);
       var tamp = json.decode(response.body);
 
       setState(() {
         tampKDSATKER = tamp["KDSATKER"];
-        print("ini kd sakter di getProfile $tampKDSATKER");
+        // print("ini kd sakter di getProfile $tampKDSATKER");
         futureNik = fetchNik("", tampKDSATKER);
         return tampKDSATKER;
       });
@@ -70,38 +82,44 @@ class _SearchPageState extends State<SearchPage> {
 
   Future<List<NikBaru>> fetchNik(String cariNIK, String satker) async {
     satker = tampKDSATKER;
-    print("ini sakter di fetch nik : $satker");
-    try {
-      var url =
-          "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/?nik=$cariNIK&kdsatker=$satker";
-      print("ini url fetch nik : $url");
-      var response = await http.get(
-        Uri.parse(url),
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + await Token().getAccessToken(),
-        },
-      );
-      print(response);
-      if (response.statusCode == 200) {
-        // return Nik.fromJson(json.decode(response.body));
-        print(response.body);
+    // print("ini sakter di fetch nik : $satker");
 
-        final res = json.decode(response.body);
-        final data = res['data'];
-        return (data as List).map((data) => NikBaru.fromJson(data)).toList();
-      } else {
-        print(response.body);
-        await Token().removeToken();
-        return Get.offAll(() => LoginAnimation());
-        // throw Exception('Failed to load data');
-      }
-    } catch (e) {
-      print(e);
+    // try {
+    var url =
+        "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/?nik=$cariNIK&kdsatker=$satker"; //old
+    // "https://app.puskeu.polri.go.id:2216/umkm/mobile/v2/penerima/cari_nik/?nik=$cariNIK&kdsatker=$satker"; //NEW
+    // "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik_raw/?nik=$cariNIK&kdsatker=$satker"; //Raw
+    print("ini url fetch nik : $url");
+    var response = await http.get(
+      Uri.parse(url),
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + await Token().getAccessToken(),
+      },
+    );
+    // print("ini response body fetch nik : ${response.body}");
+    if (response.statusCode == 200) {
+      // return Nik.fromJson(json.decode(response.body));
+      print(response.body);
+      print("ini status 200");
+
+      final res = json.decode(response.body);
+      final data = res['data'];
+      return (data as List).map((data) => NikBaru.fromJson(data)).toList();
+    } else {
+      print("ini else throw");
+      print(response.body);
       await Token().removeToken();
       return Get.offAll(() => LoginAnimation());
+      // throw Exception('Failed to load data');
     }
+    // } catch (e) {
+    //   print(e);
+    //   print("ini catch error");
+    //   await Token().removeToken();
+    //   return Get.offAll(() => LoginAnimation());
+    // }
   }
 
   @override
@@ -150,7 +168,7 @@ class _SearchPageState extends State<SearchPage> {
             primaryColor: Colors.teal[200],
             primaryColorDark: Colors.tealAccent,
           ),
-          child: TextField(
+          child: TextFormField(
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
               border: OutlineInputBorder(
@@ -159,19 +177,26 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
               suffixIcon: IconButton(
-                onPressed: () {},
+                onPressed: () {
+                  // setState(() {
+
+                  //   statusCari = true;
+                  // });
+                },
                 icon: Icon(Icons.search),
               ),
               labelText: "NIK",
               hintText: "Cari NIK",
             ),
             onChanged: (value) {
-              value = value.toLowerCase();
-              setState(() {
-                searchString = value;
-                futureNik = fetchNik(searchString, tampKDSATKER);
-                print(searchString);
-              });
+              if (value.length > 9) {
+                setState(() {
+                  searchString = value;
+                  print("ini search string $searchString");
+                  futureNik = fetchNik(searchString, tampKDSATKER);
+                });
+              } else
+                return null;
             },
             controller: _searchTxt,
           ),
@@ -208,7 +233,7 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                             trailing: IconButton(
                                 onPressed: () {
-                                  Get.to(() => PhotoPageAsli(data[index]));
+                                  // Get.to(() => PhotoPageAsli(data[index]));
                                 },
                                 icon: Icon(Icons.add)),
                           ),

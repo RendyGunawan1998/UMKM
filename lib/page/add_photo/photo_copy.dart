@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:images_picker/images_picker.dart';
 import 'package:location/location.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
 import 'package:puskeu/model/new_nik.dart';
@@ -25,8 +24,8 @@ class PhotoPage extends StatefulWidget {
 class _PhotoPageState extends State<PhotoPage> {
   // ============================= Variabel ====================
   File _selectedImage;
-  bool _inProgress = false;
   final selectedIndexes = [];
+  final picker = ImagePicker();
 
   Future<List<NikBaru>> futureNik;
   var nikTXT = TextEditingController();
@@ -156,18 +155,15 @@ class _PhotoPageState extends State<PhotoPage> {
   }
 
   getImage(ImageSource source) async {
-    setState(() {
-      _inProgress = true;
-    });
-    List<Media> image = await ImagesPicker.openCamera(
-      maxTime: 1,
-      quality: 0.8,
-      maxSize: 4000,
-      pickType: PickType.image,
+    final image = await picker.getImage(
+      source: ImageSource.camera,
+      maxHeight: 1920,
+      maxWidth: 1080,
+      imageQuality: 96,
     );
     if (image != null) {
       setState(() {
-        _selectedImage = File(image[0].path);
+        _selectedImage = File(image.path);
       });
     }
     // File image = await ImagePicker.pickImage(source: source);
@@ -193,9 +189,7 @@ class _PhotoPageState extends State<PhotoPage> {
     //   _selectedImage.path;
     // }
     else {
-      setState(() {
-        _inProgress = false;
-      });
+      print("Foto Kosong");
     }
   }
 
@@ -284,6 +278,7 @@ class _PhotoPageState extends State<PhotoPage> {
                       _locationData.latitude,
                       _locationData.longitude,
                       _selectedImage.path);
+                  _selectedImage = null;
                 },
                 child: Text("Upload"),
               )
@@ -381,14 +376,6 @@ class _PhotoPageState extends State<PhotoPage> {
             ],
           ),
         ),
-        (_inProgress)
-            ? Container(
-                height: MediaQuery.of(context).size.height * 0.95,
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            : Center(),
       ],
     );
   }

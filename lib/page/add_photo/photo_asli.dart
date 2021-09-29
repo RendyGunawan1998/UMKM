@@ -6,7 +6,6 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
-import "package:images_picker/images_picker.dart";
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
@@ -24,8 +23,8 @@ class PhotoPageAsli extends StatefulWidget {
 class _PhotoPageAsliState extends State<PhotoPageAsli> {
   // ============================= Variabel ====================
   File _selectedImage;
-  bool _inProgress = false;
   final selectedIndexes = [];
+  final picker = ImagePicker();
 
   var nikTXT = TextEditingController();
   var jenis = TextEditingController();
@@ -134,47 +133,35 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
   }
 
   getImage(ImageSource source) async {
-    setState(() {
-      _inProgress = true;
-    });
-    List<Media> image = await ImagesPicker.openCamera(
-      maxTime: 1,
-      quality: 0.8,
-      maxSize: 4000,
-      pickType: PickType.image,
+    // setState(() {
+    //   _inProgress = true;
+    // });
+    final image = await picker.getImage(
+      source: ImageSource.camera,
+      maxHeight: 1920,
+      maxWidth: 1080,
+      imageQuality: 96,
     );
     if (image != null) {
       setState(() {
-        _selectedImage = File(image[0].path);
+        _selectedImage = File(image.path);
       });
     }
-
-    // File image = await ImagePicker.pickImage(source: source);
+    // List<Media> image = await ImagesPicker.openCamera(
+    //   maxTime: 1,
+    //   quality: 0.8,
+    //   maxSize: 4000,
+    //   pickType: PickType.image,
+    // );
     // if (image != null) {
-    //   File cropped = await ImageCropper.cropImage(
-    //     sourcePath: image.path,
-    //     // aspectRatio: CropAspectRatio(ratioX: 1, ratioY: 1),
-    //     compressQuality: 100,
-    //     maxHeight: 1920,
-    //     maxWidth: 1080,
-    //     compressFormat: ImageCompressFormat.jpg,
-    //     androidUiSettings: AndroidUiSettings(
-    //         toolbarColor: Colors.deepOrange.shade900,
-    //         statusBarColor: Colors.deepOrange.shade900,
-    //         backgroundColor: Colors.white,
-    //         // hideBottomControls: true,
-    //         toolbarTitle: "Cropper"),
-    //   );
     //   setState(() {
-    //     _selectedImage = cropped;
+    //     _selectedImage = File(image[0].path);
     //     _inProgress = false;
-    //     _selectedImage.path;
     //   });
     // }
+
     else {
-      setState(() {
-        _inProgress = false;
-      });
+      print("Foto Kosong");
     }
   }
 
@@ -353,14 +340,14 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
             ],
           ),
         ),
-        (_inProgress)
-            ? Container(
-                height: MediaQuery.of(context).size.height * 0.95,
-                child: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            : Center(),
+        // (_inProgress)
+        //     ? Container(
+        //         height: MediaQuery.of(context).size.height * 0.95,
+        //         child: Center(
+        //           child: CircularProgressIndicator(),
+        //         ),
+        //       )
+        //     : Center(),
       ],
     );
   }

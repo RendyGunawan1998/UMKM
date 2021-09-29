@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:get/get.dart';
+import 'package:new_version/new_version.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
 import 'package:puskeu/get_data/fetch.dart';
 import 'package:puskeu/model/save_token.dart';
@@ -35,6 +36,7 @@ class _LoginAnimationState extends State<LoginAnimation>
   void initState() {
     super.initState();
     cekLogin();
+    // _cekVersion();
     // requestModel = new LoginRequestModel();
     //animation
     _controller = AnimationController(
@@ -44,6 +46,30 @@ class _LoginAnimationState extends State<LoginAnimation>
       lowerBound: -1,
       vsync: this,
     )..repeat();
+  }
+
+  void _cekVersion() async {
+    final newVersion = NewVersion(
+      androidId:
+          "https://app.puskeu.polri.go.id:2210/apk/Aplikasi-BTPKLW-Mobile.apk",
+    );
+    final status = await newVersion.getVersionStatus();
+    newVersion.showUpdateDialog(
+      context: context,
+      versionStatus: status,
+      dialogTitle: "Update",
+      dismissButtonText: "Cancel",
+      dialogText: "Tolong update ke versi terbaru dari versi " +
+          "${status.localVersion}" +
+          " ke versi " +
+          "${status.storeVersion}",
+      dismissAction: () {
+        Navigator.pop(context);
+      },
+      updateButtonText: "Update Sekarang",
+    );
+    print("Device : " + status.localVersion);
+    print("Store : " + status.storeVersion);
   }
 
   @override
