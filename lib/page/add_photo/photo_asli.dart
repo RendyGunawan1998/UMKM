@@ -9,12 +9,13 @@ import 'package:form_field_validator/form_field_validator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
-import 'package:puskeu/model/new_nik.dart';
+import 'package:puskeu/model/nikv2.dart';
 import 'package:puskeu/model/save_token.dart';
 import 'package:puskeu/page/add_photo/photo_copy.dart';
 
 class PhotoPageAsli extends StatefulWidget {
-  final NikBaru nikBaru;
+  // final NikBaru nikBaru;
+  final Nikv2 nikBaru;
   PhotoPageAsli(this.nikBaru);
   @override
   _PhotoPageAsliState createState() => _PhotoPageAsliState();
@@ -85,8 +86,8 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
       var responeBody = jsonDecode(response.body);
 
       setState(() {
-        var tampJenisFoto = jsonEncode(responeBody);
-        print("ini encode jenis foto : $tampJenisFoto");
+        // var tampJenisFoto = jsonEncode(responeBody);
+        // print("ini encode jenis foto : $tampJenisFoto");
         jenisPhoto = responeBody;
       });
 
@@ -318,7 +319,10 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(item['NAMAFOTO']),
+                        Text(
+                          item['NAMAFOTO'],
+                          // style: TextStyle(fontSize: 5),
+                        ),
                         item["STSFOTO"] == "1"
                             ? Icon(
                                 Icons.check_circle,

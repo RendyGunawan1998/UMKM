@@ -3,11 +3,16 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
-import 'package:puskeu/model/new_nik.dart';
+import 'package:package_info/package_info.dart';
+import 'package:puskeu/extra_screen/curve_bar.dart';
+// import 'package:puskeu/model/new_nik.dart';
 import 'package:puskeu/model/nikv2.dart';
 import 'package:puskeu/model/save_token.dart';
+import 'package:puskeu/model/version.dart';
 import 'package:puskeu/page/add_photo/photo_asli.dart';
 import 'package:puskeu/page/login_design/login_animation.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:version/version.dart';
 
 class SearchPage extends StatefulWidget {
   @override
@@ -15,13 +20,23 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  Future<List<NikBaru>> futureNik;
-  // Future<List<Nikv2>> futureNik;
+  // Future<List<NikBaru>> futureNik;
+  Future<List<Nikv2>> futureNik;
   Future<String> futureProfile;
   TextEditingController _searchTxt = TextEditingController();
   String searchString = "";
   String tampKDSATKER = "";
   bool statusCari = false;
+
+  String versi;
+  String _url =
+      "https://app.puskeu.polri.go.id:2210/apk/Aplikasi-BTPKLW-Mobile.apk";
+  String link;
+
+  Future<VersionHp> cekVersi;
+
+  Version currentVersion;
+  Version latestVersion;
 
   @override
   void setState(fn) {
@@ -32,6 +47,7 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   void initState() {
+    cekVersi = cekVersion();
     futureProfile = getProfile();
     // clearTamp();
     // print("disini kdsatker di init :$tampKDSATKER");
@@ -39,14 +55,90 @@ class _SearchPageState extends State<SearchPage> {
     super.initState();
   }
 
-  clearTamp() {
-    setState(() {
-      if (statusCari = true) {
-        searchString = null;
-      } else
-        return null;
-    });
+  @override
+  void dispose() {
+    super.dispose();
   }
+
+  Future<VersionHp> cekVersion() async {
+    try {
+      String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/version';
+      // print("ini url version : $url");
+
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+      String appName = packageInfo.appName;
+      String packageName = packageInfo.packageName;
+      String version = packageInfo.version;
+      String buildNumber = packageInfo.buildNumber;
+      print(appName);
+      print(packageName);
+      print(buildNumber);
+      print(version);
+      currentVersion = Version.parse(version);
+      print("ini currentVersion = $currentVersion");
+
+      var response = await http.get(
+        Uri.parse(url),
+        headers: {
+          "Authorization": "Bearer " + await Token().getAccessToken(),
+        },
+      );
+      //var toJson = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        var tamp = json.decode(response.body);
+        versi = tamp["version"];
+        link = tamp['url_download'];
+        print("ini link : $link");
+        latestVersion = Version.parse(versi);
+        print("ini latestVersion = $latestVersion");
+        if (latestVersion > currentVersion) {
+          print("perlu update");
+          return _showAlertToUpdate(context);
+        } else if (currentVersion == latestVersion) {
+          print("updated");
+          return null;
+        }
+        // return latestVersion;
+      } else {
+        await Token().removeToken();
+        return Get.offAll(() => LoginAnimation());
+      }
+    } catch (e) {
+      print(e);
+      await Token().removeToken();
+      return Get.offAll(() => LoginAnimation());
+    }
+  }
+
+  _showAlertToUpdate(BuildContext context) {
+    Widget okButton = TextButton(
+        child: Text("Update"),
+        onPressed: () {
+          setState(() {
+            currentVersion = latestVersion;
+          });
+          _launchURL();
+        });
+    AlertDialog alert = AlertDialog(
+      title: Text("Pemberitahuan"),
+      content: Text(
+          "Ada versi terbaru untuk aplikasi mobile. Segera update ke versi terbaru"),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  void _launchURL() async => await canLaunch(link)
+      ? await launch(link)
+      : throw 'Could not launch $link';
 
   Future<String> getProfile() async {
     String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/profil/';
@@ -80,46 +172,46 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  Future<List<NikBaru>> fetchNik(String cariNIK, String satker) async {
+  Future<List<Nikv2>> fetchNik(String cariNIK, String satker) async {
     satker = tampKDSATKER;
     // print("ini sakter di fetch nik : $satker");
 
-    // try {
-    var url =
-        "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/?nik=$cariNIK&kdsatker=$satker"; //old
-    // "https://app.puskeu.polri.go.id:2216/umkm/mobile/v2/penerima/cari_nik/?nik=$cariNIK&kdsatker=$satker"; //NEW
-    // "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik_raw/?nik=$cariNIK&kdsatker=$satker"; //Raw
-    print("ini url fetch nik : $url");
-    var response = await http.get(
-      Uri.parse(url),
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + await Token().getAccessToken(),
-      },
-    );
-    // print("ini response body fetch nik : ${response.body}");
-    if (response.statusCode == 200) {
-      // return Nik.fromJson(json.decode(response.body));
-      print(response.body);
-      print("ini status 200");
+    try {
+      var url =
+          "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik/?nik=$cariNIK&kdsatker=$satker"; //old
+      // "https://app.puskeu.polri.go.id:2216/umkm/mobile/v2/penerima/cari_nik/?nik=$cariNIK&kdsatker=$satker"; //NEW
+      // "https://app.puskeu.polri.go.id:2216/umkm/mobile/penerima/cari_nik_raw/?nik=$cariNIK&kdsatker=$satker"; //Raw
+      print("ini url fetch nik : $url");
+      var response = await http.get(
+        Uri.parse(url),
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + await Token().getAccessToken(),
+        },
+      );
+      // print("ini response body fetch nik : ${response.body}");
+      if (response.statusCode == 200) {
+        // return Nik.fromJson(json.decode(response.body));
+        // print(response.body);
+        print("ini status 200");
 
-      final res = json.decode(response.body);
-      final data = res['data'];
-      return (data as List).map((data) => NikBaru.fromJson(data)).toList();
-    } else {
-      print("ini else throw");
-      print(response.body);
+        final res = json.decode(response.body);
+        final data = res['data'];
+        return (data as List).map((data) => Nikv2.fromJson(data)).toList();
+      } else {
+        print("ini else throw");
+        // print(response.body);
+        await Token().removeToken();
+        return Get.offAll(() => LoginAnimation());
+        // throw Exception('Failed to load data');
+      }
+    } catch (e) {
+      print(e);
+      print("ini catch error");
       await Token().removeToken();
       return Get.offAll(() => LoginAnimation());
-      // throw Exception('Failed to load data');
     }
-    // } catch (e) {
-    //   print(e);
-    //   print("ini catch error");
-    //   await Token().removeToken();
-    //   return Get.offAll(() => LoginAnimation());
-    // }
   }
 
   @override
@@ -145,7 +237,7 @@ class _SearchPageState extends State<SearchPage> {
         ),
       ),
       body: SingleChildScrollView(
-        child: FutureBuilder<List<NikBaru>>(
+        child: FutureBuilder<List<Nikv2>>(
           future: futureNik,
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -178,12 +270,15 @@ class _SearchPageState extends State<SearchPage> {
               ),
               suffixIcon: IconButton(
                 onPressed: () {
-                  // setState(() {
+                  setState(() {
+                    // _searchTxt.text = "";
+                    _searchTxt.clear();
+                    // futureNik = fetchNik("", "");
 
-                  //   statusCari = true;
-                  // });
+                    Get.offAll(() => CurveBar());
+                  });
                 },
-                icon: Icon(Icons.search),
+                icon: Icon(Icons.clear),
               ),
               labelText: "NIK",
               hintText: "Cari NIK",
@@ -203,7 +298,7 @@ class _SearchPageState extends State<SearchPage> {
         ));
   }
 
-  Widget _buildbody(List<NikBaru> data) {
+  Widget _buildbody(List<Nikv2> data) {
     return Container(
       padding: EdgeInsets.all(10.0),
       width: Get.width,
@@ -233,7 +328,7 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                             trailing: IconButton(
                                 onPressed: () {
-                                  // Get.to(() => PhotoPageAsli(data[index]));
+                                  Get.to(() => PhotoPageAsli(data[index]));
                                 },
                                 icon: Icon(Icons.add)),
                           ),

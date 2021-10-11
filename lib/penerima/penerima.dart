@@ -402,6 +402,7 @@ class _PenerimaPageState extends State<PenerimaPage> {
                         },
                       );
                       print(response.body);
+                      var res = json.decode(response.body);
                       if (response.statusCode == 200) {
                         print('Token : ' + response.body);
                         print("UPLOAD SUKSES");
@@ -414,6 +415,8 @@ class _PenerimaPageState extends State<PenerimaPage> {
                         print(response.body);
                         _showAlertDialogSuccess(context);
                         return response.body;
+                      } else if (res["message"] == "data NIK Sudah ada") {
+                        _nikTerdaftar(context);
                       } else {
                         _showAlertDialog(context);
                       }
@@ -556,6 +559,27 @@ class _PenerimaPageState extends State<PenerimaPage> {
     AlertDialog alert = AlertDialog(
       title: Text("Gagal"),
       content: Text("Upload data calon penerima gagal"),
+      actions: [
+        okButton,
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  _nikTerdaftar(BuildContext context) {
+    Widget okButton = TextButton(
+        child: Text("OK"),
+        onPressed: () {
+          Navigator.pop(context);
+        });
+    AlertDialog alert = AlertDialog(
+      title: Text("Gagal"),
+      content: Text("NIK sudah pernah terdaftar"),
       actions: [
         okButton,
       ],

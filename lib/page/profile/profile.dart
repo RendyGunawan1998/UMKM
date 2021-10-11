@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:package_info/package_info.dart';
 import 'package:puskeu/model/profile_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:puskeu/model/save_token.dart';
@@ -17,11 +18,23 @@ class _ProfilePageState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
   Future<Profile> futureProfile;
   AnimationController _controller;
+  String versiHP;
 
   Future<Profile> getProfile() async {
     try {
       String url = 'https://app.puskeu.polri.go.id:2216/umkm/mobile/profil/';
       print("ini url profile di profile : $url");
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
+      String appName = packageInfo.appName;
+      String packageName = packageInfo.packageName;
+      String version = packageInfo.version;
+      String buildNumber = packageInfo.buildNumber;
+      versiHP = version;
+      print(appName);
+      print(packageName);
+      print(buildNumber);
+      print(versiHP);
 
       var response = await http.get(
         Uri.parse(url),
@@ -205,6 +218,12 @@ class _ProfilePageState extends State<ProfilePage>
                   height: 65,
                 ),
                 _buildLogOut(),
+                SizedBox(
+                  height: 20,
+                ),
+                Center(
+                  child: Text("Version : ${versiHP.toString()}"),
+                ),
               ],
             ),
           ),

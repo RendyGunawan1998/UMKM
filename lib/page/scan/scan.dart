@@ -89,7 +89,7 @@ class _ScanPageState extends State<ScanPage> {
                 } else {
                   var isGrant = await Permission.camera.request();
                   if (isGrant.isGranted) {
-                    textResult = await await FlutterBarcodeScanner.scanBarcode(
+                    textResult = await FlutterBarcodeScanner.scanBarcode(
                         "#000000", "Cancel", false, ScanMode.QR);
                     print(textResult);
                     // return textResult;

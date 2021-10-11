@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:get/get.dart';
-import 'package:new_version/new_version.dart';
 import 'package:puskeu/extra_screen/curve_bar.dart';
 import 'package:puskeu/get_data/fetch.dart';
 import 'package:puskeu/model/save_token.dart';
 import 'dart:math' as math;
 
 import 'package:http/http.dart' as http;
+// import 'package:puskeu/model/version.dart';
 import '../../extra_screen/loading.dart';
 
 class LoginAnimation extends StatefulWidget {
@@ -21,24 +21,17 @@ class _LoginAnimationState extends State<LoginAnimation>
   AnimationController _controller;
 
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
   bool _obsecureText = true;
-
   TextEditingController userTC = new TextEditingController();
   TextEditingController passTC = new TextEditingController();
-
-  // LoginRequestModel requestModel;
   bool visible = false;
-
   String message = '';
 
   @override
   void initState() {
     super.initState();
     cekLogin();
-    // _cekVersion();
-    // requestModel = new LoginRequestModel();
-    //animation
+    // checkVersion();
     _controller = AnimationController(
       value: 0.0,
       duration: Duration(seconds: 40),
@@ -46,30 +39,6 @@ class _LoginAnimationState extends State<LoginAnimation>
       lowerBound: -1,
       vsync: this,
     )..repeat();
-  }
-
-  void _cekVersion() async {
-    final newVersion = NewVersion(
-      androidId:
-          "https://app.puskeu.polri.go.id:2210/apk/Aplikasi-BTPKLW-Mobile.apk",
-    );
-    final status = await newVersion.getVersionStatus();
-    newVersion.showUpdateDialog(
-      context: context,
-      versionStatus: status,
-      dialogTitle: "Update",
-      dismissButtonText: "Cancel",
-      dialogText: "Tolong update ke versi terbaru dari versi " +
-          "${status.localVersion}" +
-          " ke versi " +
-          "${status.storeVersion}",
-      dismissAction: () {
-        Navigator.pop(context);
-      },
-      updateButtonText: "Update Sekarang",
-    );
-    print("Device : " + status.localVersion);
-    print("Store : " + status.storeVersion);
   }
 
   @override
@@ -197,6 +166,14 @@ class _LoginAnimationState extends State<LoginAnimation>
           height: 10,
         ),
         _buildButtonLogin(),
+        SizedBox(
+          height: 10,
+        ),
+        Center(
+          child: Text(
+            "Versi : 1.3.2",
+          ),
+        ),
       ],
     );
   }
@@ -269,6 +246,7 @@ class _LoginAnimationState extends State<LoginAnimation>
             // "Authorization": "Bearer " + await Token().getAccessToken(),
           },
         );
+        var res = json.decode(response.body);
         if (response.statusCode == 200) {
           Token().saveToken(response.body);
           print('Token : ' + response.body);
@@ -278,6 +256,8 @@ class _LoginAnimationState extends State<LoginAnimation>
 
           await getDataNIK();
           Get.offAll(() => LoadingScreen());
+        } else if (res["message"] == "petugas sudah di nonaktifkan") {
+          _petugasNonaktif(context);
         } else {
           setState(() {
             visible = false;
@@ -301,6 +281,26 @@ _showAlertDialog(BuildContext context, int err) {
   AlertDialog alert = AlertDialog(
     title: Text("Error"),
     content: Text("NRP/Password salah \nSilahkan ulangi kembali."),
+    actions: [
+      okButton,
+    ],
+  );
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return alert;
+    },
+  );
+}
+
+_petugasNonaktif(BuildContext context) {
+  Widget okButton = TextButton(
+    child: Text("OK"),
+    onPressed: () => Navigator.pop(context),
+  );
+  AlertDialog alert = AlertDialog(
+    title: Text("Alert"),
+    content: Text("Petugas  sudah dinonaktifkan."),
     actions: [
       okButton,
     ],
