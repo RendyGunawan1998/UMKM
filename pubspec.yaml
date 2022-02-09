@@ -48,6 +48,10 @@ dependencies:
   url_launcher: ^6.0.12
   version: ^2.0.0
   package_info: ^2.0.2
+  sqflite: ^2.0.2
+  path_provider: ^2.0.8
+  csv: ^5.0.1
+  gallery_saver: ^2.3.2
 
 flutter_icons:
   android: true

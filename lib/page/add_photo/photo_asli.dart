@@ -42,6 +42,7 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
   String _mySelection;
   bool isChecked = true;
   String tampNIK = "";
+  bool loading = false;
   // ============================= Variabel ====================
 
   // ============================= Init ====================
@@ -202,6 +203,7 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
       });
       print(response.body);
       _showAlertDialoSuccess(context, response.statusCode);
+      loading = false;
       return "Berhasil";
     } else {
       print(response.body);
@@ -251,6 +253,7 @@ class _PhotoPageAsliState extends State<PhotoPageAsli> {
                   setState(() {
                     tampNIK = nikTXT.text;
                   });
+                  loading = true;
                   await addTreatment(
                       nikTXT.text,
                       _mySelection,

@@ -1,3 +1,5 @@
+// ignore_for_file: missing_return
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -29,8 +31,7 @@ class _SearchPageState extends State<SearchPage> {
   bool statusCari = false;
 
   String versi;
-  String _url =
-      "https://app.puskeu.polri.go.id:2210/apk/Aplikasi-BTPKLW-Mobile.apk";
+
   String link;
 
   Future<VersionHp> cekVersi;

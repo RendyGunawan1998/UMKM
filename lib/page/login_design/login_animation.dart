@@ -9,6 +9,7 @@ import 'package:puskeu/model/save_token.dart';
 import 'dart:math' as math;
 
 import 'package:http/http.dart' as http;
+import 'package:puskeu/page/offline/data_penerima/data_penerima_offline.dart';
 // import 'package:puskeu/model/version.dart';
 import '../../extra_screen/loading.dart';
 
@@ -25,12 +26,18 @@ class _LoginAnimationState extends State<LoginAnimation>
   TextEditingController userTC = new TextEditingController();
   TextEditingController passTC = new TextEditingController();
   bool visible = false;
+  bool loading = true;
   String message = '';
 
   @override
   void initState() {
     super.initState();
     cekLogin();
+    Future.delayed(Duration(seconds: 1), () {
+      setState(() {
+        loading = false;
+      });
+    });
     // checkVersion();
     _controller = AnimationController(
       value: 0.0,
@@ -174,6 +181,24 @@ class _LoginAnimationState extends State<LoginAnimation>
             "Versi : 1.3.2",
           ),
         ),
+        SizedBox(
+          height: 10,
+        ),
+        Center(
+          child: TextButton(
+            onPressed: () {
+              Get.to(() => DataPenerimaOffline());
+            },
+            child: Text(
+              "MODE OFFLINE",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -215,7 +240,9 @@ class _LoginAnimationState extends State<LoginAnimation>
           width: 200,
           child: MaterialButton(
             onPressed: () {
-              _testLogin();
+              setState(() {
+                loading ? CircularProgressIndicator() : _testLogin();
+              });
             },
             color: Colors.blueAccent,
             child: Text(
@@ -232,6 +259,7 @@ class _LoginAnimationState extends State<LoginAnimation>
     if (formKey.currentState.validate()) {
       setState(() {
         visible = true;
+        loading = true;
       });
 
       var _body = {'NRP': userTC.text, 'password': passTC.text};
@@ -252,6 +280,7 @@ class _LoginAnimationState extends State<LoginAnimation>
           print('Token : ' + response.body);
           setState(() {
             visible = false;
+            loading = false;
           });
 
           await getDataNIK();
